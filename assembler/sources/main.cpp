@@ -15,5 +15,7 @@ int main()
 
     assembleRun(in_file, out_file);
     logExit();
+    fclose(in_file);
+    fclose(out_file);
     return 0;
 }
