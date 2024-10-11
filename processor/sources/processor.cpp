@@ -24,6 +24,11 @@ void processorRun(processor_t * proc)
             stackPush(proc->stk, procGetArg(proc));
             break;
         }
+        case POP_CMD:{
+            proc->ip++;
+            proc->reg[*(proc->ip)] = stackPop(proc->stk);
+            break;
+        }
         case ADD_CMD:{
             int a = stackPop(proc->stk);
             int b = stackPop(proc->stk);

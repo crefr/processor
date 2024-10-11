@@ -4,6 +4,7 @@
 enum commands
 {
     PUSH_CMD = 1,
+    POP_CMD,
 
     ADD_CMD,
     SUB_CMD,
@@ -19,6 +20,8 @@ enum commands
 
     DUMP_CMD,
 
+    JMP_CMD,
+    JA_CMD,
     HLT_CMD = 0
 };
 const int CMDNUM_MASK = 0x0f;
