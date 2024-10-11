@@ -71,8 +71,18 @@ void assembleRun(FILE * in_file, FILE * out_file)
             cmdcount++;
             continue;
         }
-        if (strcmp(cmd, "add") == 0){
-            fprintf(out_file, "%d\n", ADD_CMD);
+        if (strcmp(cmd, "jmp") == 0){
+            int jmp_address = 0;
+            fscanf(in_file, "%d", &jmp_address);
+            cmdcount++;
+            fprintf(out_file, "%d %d\n", JMP_CMD, jmp_address);
+            continue;
+        }
+        if (strcmp(cmd, "ja") == 0){
+            int jmp_address = 0;
+            fscanf(in_file, "%d", &jmp_address);
+            cmdcount++;
+            fprintf(out_file, "%d %d\n", JA_CMD, jmp_address);
             continue;
         }
         if (strcmp(cmd, "add") == 0){
@@ -83,8 +93,20 @@ void assembleRun(FILE * in_file, FILE * out_file)
             fprintf(out_file, "%d\n", SUB_CMD);
             continue;
         }
+        if (strcmp(cmd, "mul") == 0){
+            fprintf(out_file, "%d\n", MUL_CMD);
+            continue;
+        }
+        if (strcmp(cmd, "div") == 0){
+            fprintf(out_file, "%d\n", DIV_CMD);
+            continue;
+        }
         if (strcmp(cmd, "out") == 0){
             fprintf(out_file, "%d\n", OUT_CMD);
+            continue;
+        }
+        if (strcmp(cmd, "in") == 0){
+            fprintf(out_file, "%d\n", IN_CMD);
             continue;
         }
         if (strcmp(cmd, "hlt") == 0){
