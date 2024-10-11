@@ -21,10 +21,7 @@ void processorRun(processor_t * proc)
         processorDump(proc);
         switch ((*(proc->ip)) & CMDNUM_MASK){
         case PUSH_CMD:{
-            int arg = 0;
-            proc->ip++;
-            arg = *(proc->ip);
-            stackPush(proc->stk, arg);
+            stackPush(proc->stk, procGetArg(proc));
             break;
         }
         case ADD_CMD:{
@@ -110,7 +107,17 @@ void processorDtor(processor_t * proc)
 
 static int procGetArg(processor_t * proc)
 {
-    return 0;
+    int result = 0;
+    int cmd = *(proc->ip);
+    if (cmd & REG_MASK){
+        proc->ip++;
+        result += proc->reg[*(proc->ip)];
+    }
+    if (cmd & DIG_MASK){
+        proc->ip++;
+        result += *(proc->ip);
+    }
+    return result;
 }
 
 void processorDump(processor_t * proc)
@@ -136,3 +143,4 @@ void processorDump(processor_t * proc)
     }
     logPrint(LOG_DEBUG, "-----------PROCESSOR_DUMP_END-----------\n\n");
 }
+
