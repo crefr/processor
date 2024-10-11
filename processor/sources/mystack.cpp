@@ -63,7 +63,7 @@ stack_t stackCtor(size_t start_cap)
     IF_STACK_STRUCT_CANARIES_ON(stk.structcanary2 = CANARY2;)
     IF_STACK_HASH_ON(stackUpdateHash(&stk);)
     STACKASSERT(&stk, stackOK(&stk) == STACK_OK);
-    LOGPRINTWITHTIME(LOG_DEBUG_PLUS, "STACK CONSTRUCTED, start_cap = %zu", start_cap);
+    LOGPRINTWITHTIME(LOG_DEBUG_PLUS, "STACK CONSTRUCTED, start_cap = %zu\n", start_cap);
     return stk;
 }
 
@@ -76,13 +76,13 @@ void stackDtor(stack_t * stk)
   #else
     free((canary_t *)(stk->data) - 1);
   #endif
-    LOGPRINTWITHTIME(LOG_DEBUG_PLUS, "STACK DESTRUCTED");
+    LOGPRINTWITHTIME(LOG_DEBUG_PLUS, "STACK DESTRUCTED\n");
 }
 
 static void stackResize(stack_t * stk, size_t newcap)
 {
     assert(stk != NULL);
-    LOGPRINTWITHTIME(LOG_DEBUG_PLUS, "stack RESIZE from %zu to %zu", stk->capacity, newcap);
+    LOGPRINTWITHTIME(LOG_DEBUG_PLUS, "stack RESIZE from %zu to %zu\n", stk->capacity, newcap);
     stk->capacity = newcap;
   #ifndef STACK_DATA_CANARIES_ON
     stk->data = (stack_elem_t *) realloc(stk->data, newcap * sizeof(stack_elem_t));
@@ -112,7 +112,7 @@ stack_elem_t stackPop(stack_t * stk)
 {
     assert(stk != NULL);
     STACKASSERT(stk, stk->size != 0);
-    LOGPRINTWITHTIME(LOG_DEBUG_PLUS, "stack POP, size: %zu, val: %lg", stk->size, stk->data[stk->size - 1]);
+    LOGPRINTWITHTIME(LOG_DEBUG_PLUS, "stack POP, size: %zu, val: %lg\n", stk->size, stk->data[stk->size - 1]);
     stack_elem_t val = stk->data[stk->size - 1];
     if (stk->size - 1 <= stk->capacity / 4)
         stackReduce(stk);
@@ -127,7 +127,7 @@ stack_elem_t stackPop(stack_t * stk)
 void stackPush(stack_t * stk, stack_elem_t val)
 {
     assert(stk != NULL);
-    LOGPRINTWITHTIME(LOG_DEBUG_PLUS, "stack PUSH, size: %zu, val: %lg", stk->size, val);
+    LOGPRINTWITHTIME(LOG_DEBUG_PLUS, "stack PUSH, size: %zu, val: %lg\n", stk->size, val);
     STACKASSERT(stk, stackOK(stk) == STACK_OK);
     if (stk->size == stk->capacity)
         stackEnlarge(stk);
@@ -146,23 +146,23 @@ void stackPush(stack_t * stk, stack_elem_t val)
 void stackDump(stack_t * stk)
 {
     assert(stk != NULL);
-    logPrint(LOG_DEBUG, "-----------STACK DUMP-----------");
-    logPrint(LOG_DEBUG, "stack_t[%p]{", stk);
-    logPrint(LOG_DEBUG, "\terrNo = %d", stk->errNo);
-    logPrint(LOG_DEBUG, "\tsize = %lu", stk->size);
-    logPrint(LOG_DEBUG, "\tcapacity = %lu", stk->capacity);
+    logPrint(LOG_DEBUG, "-----------STACK DUMP-----------\n");
+    logPrint(LOG_DEBUG, "stack_t[%p]{\n", stk);
+    logPrint(LOG_DEBUG, "\terrNo = %d\n", stk->errNo);
+    logPrint(LOG_DEBUG, "\tsize = %lu\n", stk->size);
+    logPrint(LOG_DEBUG, "\tcapacity = %lu\n", stk->capacity);
 IF_STACK_HASH_ON(
-    logPrint(LOG_DEBUG, "\thash = %08X", stk->hash);
+    logPrint(LOG_DEBUG, "\thash = %08X\n", stk->hash);
 )
-    logPrint(LOG_DEBUG, "\tdata[%p]", stk->data);
+    logPrint(LOG_DEBUG, "\tdata[%p]\n", stk->data);
     if (stk->data != NULL){
-        logPrint(LOG_DEBUG, "\t{");
+        logPrint(LOG_DEBUG, "\t{\n");
         for (size_t index = 0; index < stk->capacity; index++){
-            logPrint(LOG_DEBUG, "\t\t[%lu] = %d", index, stk->data[index]);
+            logPrint(LOG_DEBUG, "\t\t[%lu] = %d\n", index, stk->data[index]);
         }
-        logPrint(LOG_DEBUG, "\t}");
+        logPrint(LOG_DEBUG, "\t}\n");
     }
-    logPrint(LOG_DEBUG, "}\n---------STACK DUMP END---------");
+    logPrint(LOG_DEBUG, "}\n---------STACK DUMP END---------\n");
 }
 
 stackstatus stackOK(stack_t * stk)

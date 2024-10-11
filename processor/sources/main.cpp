@@ -11,8 +11,9 @@ int main()
 
     processor_t proc = {};
 
-    processorGetProg(&proc, prog_file);
-    processorRun(&proc);
+    processorCtor(&proc, prog_file);
+    processorRun (&proc);
+    processorDtor(&proc);
     logExit();
 
     fclose(prog_file);

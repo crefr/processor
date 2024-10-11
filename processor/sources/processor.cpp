@@ -4,40 +4,43 @@
 #include <string.h>
 #include <assert.h>
 
+#include "logger.h"
 #include "processor.h"
 #include "mystack.h"
 #include "../../comands.h"
 
 const size_t MAXCMDLEN = 50;
 const size_t MAXPROGLEN = 50000;
+
+static int procGetArg(processor_t * proc);
+
 void processorRun(processor_t * proc)
 {
-    int * ip = proc->prog;
-    stack_t stk = stackCtor(0);
     int quit = 0;
-    while (ip < ip + proc->prog_size && quit != 1){
-        switch (*ip){
+    while (proc->ip < proc->ip + proc->prog_size && quit != 1){
+        processorDump(proc);
+        switch ((*(proc->ip)) & CMDNUM_MASK){
         case PUSH_CMD:{
             int arg = 0;
-            ip++;
-            arg = *ip;
-            stackPush(&stk, arg);
+            proc->ip++;
+            arg = *(proc->ip);
+            stackPush(proc->stk, arg);
             break;
         }
         case ADD_CMD:{
-            int a = stackPop(&stk);
-            int b = stackPop(&stk);
-            stackPush(&stk, a + b);
+            int a = stackPop(proc->stk);
+            int b = stackPop(proc->stk);
+            stackPush(proc->stk, a + b);
             break;
         }
         case SUB_CMD:{
-            int a = stackPop(&stk);
-            int b = stackPop(&stk);
-            stackPush(&stk, b - a);
+            int a = stackPop(proc->stk);
+            int b = stackPop(proc->stk);
+            stackPush(proc->stk, b - a);
             break;
         }
         case OUT_CMD:{
-            int out_elem = stackPop(&stk);
+            int out_elem = stackPop(proc->stk);
             printf("%d\n", out_elem);
             break;
         }
@@ -45,22 +48,50 @@ void processorRun(processor_t * proc)
             quit = 1;
             break;
         }
+        case MUL_CMD:{
+            int a = stackPop(proc->stk);
+            int b = stackPop(proc->stk);
+            stackPush(proc->stk, a * b);
+            break;
         }
-        ip++;
+        case DIV_CMD:{
+            int a = stackPop(proc->stk);
+            int b = stackPop(proc->stk);
+            stackPush(proc->stk, b / a);
+            break;
+        }
+        default:
+            quit = 1;
+            PRINTFANDLOG(LOG_RELEASE, "invalid instruction: %02X", (unsigned int) *(proc->ip));
+            break;
+        }
+        proc->ip++;
     }
-    stackDtor(&stk);
 }
 
-void processorGetProg(processor_t * proc, FILE * prog_file)
+void processorCtor(processor_t * proc, FILE * prog_file)
 {
     assert(proc      != NULL);
     assert(prog_file != NULL);
     fscanf(prog_file, "%zu", &(proc->prog_size));
+
+    //making stack
+    proc->stk = (stack_t *)calloc(1, sizeof(stack_t));
+    *(proc->stk) = stackCtor(0);
+
+    //making registers
+    proc->reg  = (int *)calloc(REGNUM, sizeof(int));
+
+    //making space for program
     proc->prog = (int *)calloc(proc->prog_size, sizeof(int));
 
+    //reading program from file
     for (size_t index = 0; index < proc->prog_size; index++){
         fscanf(prog_file, "%d", proc->prog + index);
     }
+
+    //initializing ip
+    proc->ip = proc->prog;
 }
 
 void processorDtor(processor_t * proc)
@@ -68,4 +99,40 @@ void processorDtor(processor_t * proc)
     assert(proc != NULL);
     free(proc->prog);
     proc->prog = NULL;
+
+    free(proc->reg);
+    proc->reg = NULL;
+
+    stackDtor(proc->stk);
+    free(proc->stk);
+    proc->stk = NULL;
+}
+
+static int procGetArg(processor_t * proc)
+{
+    return 0;
+}
+
+void processorDump(processor_t * proc)
+{
+    logPrint(LOG_DEBUG, "\n-------------PROCESSOR_DUMP-------------\n");
+    logPrint(LOG_DEBUG, "processor at %p\n", proc);
+    logPrint(LOG_DEBUG, "\tprog [%p]:\n", proc->prog);
+    logPrint(LOG_DEBUG, "\t\t");
+    for (size_t cmd_index = 0; cmd_index < proc->prog_size; cmd_index++)
+        logPrint(LOG_DEBUG, "%4zu ", cmd_index);
+    logPrint(LOG_DEBUG, "\n");
+    logPrint(LOG_DEBUG, "\t\t");
+    for (size_t cmd_index = 0; cmd_index < proc->prog_size; cmd_index++)
+        logPrint(LOG_DEBUG, "%4d ", proc->prog[cmd_index]);
+    logPrint(LOG_DEBUG, "\n\t\t");
+    for (size_t cmd_skip = 0; cmd_skip < (size_t)((proc->ip) - (proc->prog)); cmd_skip++)
+        logPrint(LOG_DEBUG, "     ");
+    logPrint(LOG_DEBUG, "   ^\n");
+
+    logPrint(LOG_DEBUG, "\tregisters: \n");
+    for (size_t reg_index = 0; reg_index < REGNUM; reg_index++){
+        logPrint(LOG_DEBUG, "\t\treg 0x%02X: %d\n", reg_index, proc->reg[reg_index]);
+    }
+    logPrint(LOG_DEBUG, "-----------PROCESSOR_DUMP_END-----------\n\n");
 }
