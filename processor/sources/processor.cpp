@@ -18,7 +18,7 @@ void processorRun(processor_t * proc)
 {
     int quit = 0;
     while (proc->ip < proc->ip + proc->prog_size && quit != 1){
-        processorDump(proc);
+        //processorDump(proc);
         switch ((*(proc->ip)) & CMDNUM_MASK){
         case PUSH_CMD:{
             stackPush(proc->stk, procGetArg(proc));
@@ -27,6 +27,21 @@ void processorRun(processor_t * proc)
         case POP_CMD:{
             proc->ip++;
             proc->reg[*(proc->ip)] = stackPop(proc->stk);
+            break;
+        }
+        case JMP_CMD:{
+            proc->ip = proc->prog + *(proc->ip + 1);
+            continue;
+        }
+        case JA_CMD:{
+            int a = stackPop(proc->stk);
+            int b = stackPop(proc->stk);
+            if (a > b){
+                proc->ip = proc->prog + *(proc->ip + 1);
+                continue;
+            }
+            else
+                proc->ip++;
             break;
         }
         case ADD_CMD:{
@@ -44,6 +59,12 @@ void processorRun(processor_t * proc)
         case OUT_CMD:{
             int out_elem = stackPop(proc->stk);
             printf("%d\n", out_elem);
+            break;
+        }
+        case IN_CMD:{
+            int in_elem = 0;
+            scanf("%d", &in_elem);
+            stackPush(proc->stk, in_elem);
             break;
         }
         case HLT_CMD:{
@@ -64,7 +85,7 @@ void processorRun(processor_t * proc)
         }
         default:
             quit = 1;
-            PRINTFANDLOG(LOG_RELEASE, "invalid instruction: %02X", (unsigned int) *(proc->ip));
+            PRINTFANDLOG(LOG_RELEASE, "invalid instruction: %02X ", (unsigned int) *(proc->ip));
             break;
         }
         proc->ip++;
@@ -140,7 +161,7 @@ void processorDump(processor_t * proc)
     logPrint(LOG_DEBUG, "\n\t\t");
     for (size_t cmd_skip = 0; cmd_skip < (size_t)((proc->ip) - (proc->prog)); cmd_skip++)
         logPrint(LOG_DEBUG, "     ");
-    logPrint(LOG_DEBUG, "   ^\n");
+    logPrint(LOG_DEBUG, "   ^ ip = %zu\n", proc->ip - proc->prog);
 
     logPrint(LOG_DEBUG, "\tregisters: \n");
     for (size_t reg_index = 0; reg_index < REGNUM; reg_index++){
