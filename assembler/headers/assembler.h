@@ -1,6 +1,7 @@
 #ifndef ASSEMBLER_INCLUDED
 #define ASSEMBLER_INCLUDED
 
-void assembleRun(FILE * in_file, FILE * out_file);
+size_t assembleRun(FILE * _file, int * program);
+void progToText(FILE * out_file, int * program, size_t prog_size);
 
 #endif

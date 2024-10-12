@@ -18,7 +18,7 @@ void processorRun(processor_t * proc)
 {
     int quit = 0;
     while (proc->ip < proc->ip + proc->prog_size && quit != 1){
-        //processorDump(proc);
+        processorDump(proc);
         switch ((*(proc->ip)) & CMDNUM_MASK){
         case PUSH_CMD:{
             stackPush(proc->stk, procGetArg(proc));

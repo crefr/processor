@@ -8,57 +8,40 @@
 #include "../../comands.h"
 #include "logger.h"
 
-const size_t MAXCMDLEN = 50;
-void assembleRun(FILE * in_file, FILE * out_file)
+const size_t MAXCMDLEN  = 50;
+size_t assembleRun(FILE * in_file, int * program)
 {
-    fprintf(out_file, "%8d\n", 0);
-
-    size_t cmdcount = 0;
+    int * ip = program - 1;
     while (1){
-        cmdcount++;
+        ip++;
         char cmd[MAXCMDLEN] = "";
         fscanf(in_file, "%s", cmd);
 
         if (strcmp(cmd, "push") == 0){
             int digit_arg = 0;
             int reg_arg   = 0;
-            char arg1_str[ARGMAXLEN + 1] = "";
+            char reg_str[ARGMAXLEN + 1] = "";
             int push_cmd_code = PUSH_CMD;
 
-            fscanf(in_file, " %s ", arg1_str);
-            if (!isdigit(arg1_str[0]) && arg1_str[0] != '-'){
-                push_cmd_code |= REG_MASK;
-                switch(arg1_str[1]){
-                    case 'a': case 'A':
-                        reg_arg = RAX;
-                        break;
-                    case 'b': case 'B':
-                        reg_arg = RBX;
-                        break;
-                    case 'c': case 'C':
-                        reg_arg = RCX;
-                        break;
-                    case 'd': case 'D':
-                        reg_arg = RDX;
-                        break;
-                    default:
-                        PRINTFANDLOG(LOG_RELEASE, "invalid argument at word: %zu", cmdcount);
-                        break;
-                }
-                if (fscanf(in_file, "%d", &digit_arg) != 0){
-                    push_cmd_code |= DIG_MASK;
-                    fprintf(out_file, "%d %d %d\n", push_cmd_code, reg_arg, digit_arg);
-                    cmdcount += 2;
-                }
-                else{
-                    fprintf(out_file, "%d %d\n", push_cmd_code, reg_arg);
-                    cmdcount += 1;
-                }
+            if (fscanf(in_file, "%d", &digit_arg) != 0){
+                push_cmd_code |= DIG_MASK;
+                *(ip++) = push_cmd_code;
+                *ip     = digit_arg;
             }
             else{
-                push_cmd_code |= DIG_MASK;
-                fprintf(out_file, "%d %s\n", push_cmd_code, arg1_str);
-                cmdcount += 1;
+                fscanf(in_file, " %s ", reg_str);
+                push_cmd_code |= REG_MASK;
+                reg_arg = toupper(reg_str[1]) - 'A' + 1;
+                if (fscanf(in_file, "%d", &digit_arg) != 0){
+                    push_cmd_code |= DIG_MASK;
+                    *(ip++) = push_cmd_code;
+                    *(ip++) = reg_arg;
+                    *ip     = digit_arg;
+                }
+                else{
+                    *(ip++) = push_cmd_code;
+                    *ip     = reg_arg;
+                }
             }
             continue;
         }
@@ -67,54 +50,61 @@ void assembleRun(FILE * in_file, FILE * out_file)
             char reg_str[ARGMAXLEN + 1] = "";
             fscanf(in_file, "%s", reg_str);
             int reg_num = reg_str[1] - 'a' + 1;
-            fprintf(out_file, "%d %d\n", pop_cmd_code, reg_num);
-            cmdcount++;
+            *(ip++) = pop_cmd_code;
+            *ip     = reg_num;
             continue;
         }
         if (strcmp(cmd, "jmp") == 0){
             int jmp_address = 0;
             fscanf(in_file, "%d", &jmp_address);
-            cmdcount++;
-            fprintf(out_file, "%d %d\n", JMP_CMD, jmp_address);
+            *(ip++) = JMP_CMD;
+            *ip     = jmp_address;
             continue;
         }
         if (strcmp(cmd, "ja") == 0){
             int jmp_address = 0;
             fscanf(in_file, "%d", &jmp_address);
-            cmdcount++;
-            fprintf(out_file, "%d %d\n", JA_CMD, jmp_address);
+            *(ip++) = JA_CMD;
+            *ip     = jmp_address;
             continue;
         }
         if (strcmp(cmd, "add") == 0){
-            fprintf(out_file, "%d\n", ADD_CMD);
+            *ip = ADD_CMD;
             continue;
         }
         if (strcmp(cmd, "sub") == 0){
-            fprintf(out_file, "%d\n", SUB_CMD);
+            *ip = SUB_CMD;
             continue;
         }
         if (strcmp(cmd, "mul") == 0){
-            fprintf(out_file, "%d\n", MUL_CMD);
+            *ip = MUL_CMD;
             continue;
         }
         if (strcmp(cmd, "div") == 0){
-            fprintf(out_file, "%d\n", DIV_CMD);
+            *ip = DIV_CMD;
             continue;
         }
         if (strcmp(cmd, "out") == 0){
-            fprintf(out_file, "%d\n", OUT_CMD);
+            *ip = OUT_CMD;
             continue;
         }
         if (strcmp(cmd, "in") == 0){
-            fprintf(out_file, "%d\n", IN_CMD);
+            *ip = IN_CMD;
             continue;
         }
         if (strcmp(cmd, "hlt") == 0){
-            fprintf(out_file, "%d\n", HLT_CMD);
+            *ip = HLT_CMD;
             break;
         }
-        PRINTFANDLOG(LOG_RELEASE, "SYNTAX ERROR: %s", cmd);
+        PRINTFANDLOG(LOG_RELEASE, "SYNTAX ERROR: %s\n", cmd);
     }
-    fseek(out_file, 0, SEEK_SET);
-    fprintf(out_file, "%08lu", cmdcount);
+    return ip - program + 1;
+}
+
+void progToText(FILE * out_file, int * program, size_t prog_size)
+{
+    fprintf(out_file, "%8zu\n", prog_size);
+    for (size_t ip = 0; ip < prog_size; ip++){
+        fprintf(out_file, "%d ", program[ip]);
+    }
 }
