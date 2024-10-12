@@ -9,6 +9,9 @@
 #include "logger.h"
 
 const size_t MAXCMDLEN  = 50;
+
+static void scanPushArgs(FILE * in_file, int ** ip);
+
 size_t assembleRun(FILE * in_file, int * program)
 {
     int * ip = program - 1;
@@ -18,31 +21,7 @@ size_t assembleRun(FILE * in_file, int * program)
         fscanf(in_file, "%s", cmd);
 
         if (strcmp(cmd, "push") == 0){
-            int digit_arg = 0;
-            int reg_arg   = 0;
-            char reg_str[ARGMAXLEN + 1] = "";
-            int push_cmd_code = PUSH_CMD;
-
-            if (fscanf(in_file, "%d", &digit_arg) != 0){
-                push_cmd_code |= DIG_MASK;
-                *(ip++) = push_cmd_code;
-                *ip     = digit_arg;
-            }
-            else{
-                fscanf(in_file, " %s ", reg_str);
-                push_cmd_code |= REG_MASK;
-                reg_arg = toupper(reg_str[1]) - 'A' + 1;
-                if (fscanf(in_file, "%d", &digit_arg) != 0){
-                    push_cmd_code |= DIG_MASK;
-                    *(ip++) = push_cmd_code;
-                    *(ip++) = reg_arg;
-                    *ip     = digit_arg;
-                }
-                else{
-                    *(ip++) = push_cmd_code;
-                    *ip     = reg_arg;
-                }
-            }
+            scanPushArgs(in_file, &ip);
             continue;
         }
         if (strcmp(cmd, "pop") == 0){
@@ -101,9 +80,39 @@ size_t assembleRun(FILE * in_file, int * program)
     return ip - program + 1;
 }
 
+
+static void scanPushArgs(FILE * in_file, int ** ip)
+{
+    int digit_arg = 0;
+    int reg_arg   = 0;
+    char reg_str[ARGMAXLEN + 1] = "";
+    int push_cmd_code = PUSH_CMD;
+
+    if (fscanf(in_file, "%d", &digit_arg) != 0){
+        push_cmd_code |= DIG_MASK;
+        *((*ip)++) = push_cmd_code;
+        **ip       = digit_arg;
+    }
+    else{
+        fscanf(in_file, " %s ", reg_str);
+        push_cmd_code |= REG_MASK;
+        reg_arg = toupper(reg_str[1]) - 'A' + 1;
+        if (fscanf(in_file, "%d", &digit_arg) != 0){
+            push_cmd_code |= DIG_MASK;
+            *((*ip)++) = push_cmd_code;
+            *((*ip)++) = reg_arg;
+            **ip       = digit_arg;
+        }
+        else{
+            *((*ip)++) = push_cmd_code;
+            **ip       = reg_arg;
+        }
+    }
+}
+
 void progToText(FILE * out_file, int * program, size_t prog_size)
 {
-    fprintf(out_file, "%8zu\n", prog_size);
+    fprintf(out_file, "%08zu\n", prog_size);
     for (size_t ip = 0; ip < prog_size; ip++){
         fprintf(out_file, "%d ", program[ip]);
     }
