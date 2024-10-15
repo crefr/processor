@@ -2,13 +2,14 @@
 #define PROCESSOR_INCLUDED
 
 #include "mystack.h"
+#include "../../comands.h"
 
 typedef struct
 {
     int * prog;
     size_t prog_size;
     stack_t * stk;
-    int * reg;
+    int reg[REGNUM];
     int * ip;
 } processor_t;
 

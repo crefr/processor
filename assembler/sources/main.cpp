@@ -12,13 +12,18 @@ int main()
     FILE * in_file = fopen("../program.asm", "r");
     assert(in_file != NULL);
 
-    FILE * out_file = fopen("../program_code.txt", "w");
+    FILE * code_text_file = fopen("../program_code_text.txt", "w");
+    FILE * code_file = fopen("../program_code.txt", "wb");
 
     int program[MAXPROGLEN] = {};
-    size_t prog_len = assembleRun(in_file, program);
-    progToText(out_file, program, prog_len);
+    program_t prog = progCtor(program, in_file, code_file, code_text_file);
+
+    size_t prog_len = assembleRun(&prog);
+    progToText(&prog);
+    progToCode(&prog);
     logExit();
     fclose(in_file);
-    fclose(out_file);
+    fclose(code_text_file);
+    fclose(code_file);
     return 0;
 }

@@ -92,39 +92,36 @@ void processorRun(processor_t * proc)
     }
 }
 
+static void processorGetProgFromCode(processor_t * proc, FILE * prog_file);
 void processorCtor(processor_t * proc, FILE * prog_file)
 {
     assert(proc      != NULL);
     assert(prog_file != NULL);
-    fscanf(prog_file, "%zu", &(proc->prog_size));
+    //fscanf(prog_file, "%zu", &(proc->prog_size));
 
     //making stack
     proc->stk = (stack_t *)calloc(1, sizeof(stack_t));
     *(proc->stk) = stackCtor(0);
 
-    //making registers
-    proc->reg  = (int *)calloc(REGNUM, sizeof(int));
-
-    //making space for program
-    proc->prog = (int *)calloc(proc->prog_size, sizeof(int));
-
-    //reading program from file
-    for (size_t index = 0; index < proc->prog_size; index++){
-        fscanf(prog_file, "%d", proc->prog + index);
-    }
+    //getting the program
+    processorGetProgFromCode(proc, prog_file);
 
     //initializing ip
     proc->ip = proc->prog;
 }
+static void processorGetProgFromCode(processor_t * proc, FILE * prog_file)
+{
+    fread(&(proc->prog_size), sizeof(proc->prog_size), 1, prog_file);
+    proc->prog = (int *)calloc(proc->prog_size, sizeof(int));
+    fread(proc->prog, sizeof(int), proc->prog_size, prog_file);
+}
+
 
 void processorDtor(processor_t * proc)
 {
     assert(proc != NULL);
     free(proc->prog);
     proc->prog = NULL;
-
-    free(proc->reg);
-    proc->reg = NULL;
 
     stackDtor(proc->stk);
     free(proc->stk);
