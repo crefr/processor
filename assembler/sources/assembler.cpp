@@ -8,10 +8,10 @@
 #include "../../comands.h"
 #include "logger.h"
 
+//const char SIGNATURE[] = "crefr";
+
 const size_t MAXCMDLEN  = 50;
-
 static void scanPushArgs(program_t * prog);
-
 size_t assembleRun(program_t * prog)
 {
     while (1){
@@ -74,7 +74,7 @@ size_t assembleRun(program_t * prog)
             *prog->ip = HLT_CMD;
             break;
         }
-        PRINTFANDLOG(LOG_RELEASE, "SYNTAX ERROR: %s\n", cmd);
+        PRINTFANDLOG(LOG_RELEASE, "SYNTAX ERROR: %s in command %zu\n", cmd, (size_t)(prog->ip - prog->program));
     }
     prog->size = (size_t)(prog->ip - prog->program + 1);
     return prog->size;
@@ -111,10 +111,19 @@ static void scanPushArgs(program_t * prog)
 }
 
 
-static void printSignature(FILE * out_file, size_t prog_size)
+/*************************
+HEADER FORMAT (byte representation)
+c r e f r 00 25 00 00 00 00 00 00 00
+^            ^
+|            |
+signature    num of tokens (size_t)
+**************************/
+static void writeHeader(FILE * out_file, size_t prog_size)
 {
-    return;
+    fwrite(SIGNATURE, sizeof(SIGNATURE), 1, out_file);
+    fwrite(&prog_size, sizeof(prog_size), 1, out_file);
 }
+
 void progToText(program_t * prog)
 {
     fprintf(prog->out_text_file, "%08zu\n", prog->size);
@@ -125,7 +134,8 @@ void progToText(program_t * prog)
 
 void progToCode(program_t * prog)
 {
-    fwrite(&prog->size, sizeof(size_t), 1, prog->out_file);
+    //fwrite(&prog->size, sizeof(size_t), 1, prog->out_file);
+    writeHeader(prog->out_file, prog->size);
     fwrite(prog->program, sizeof(int), prog->size, prog->out_file);
 }
 

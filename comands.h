@@ -40,4 +40,6 @@ const size_t ARGMAXLEN = 100;
 const int REG_MASK = 0x20;
 const int DIG_MASK = 0x10;
 
+const char SIGNATURE[] = "crefr";
+
 #endif

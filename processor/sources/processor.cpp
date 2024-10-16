@@ -92,7 +92,7 @@ void processorRun(processor_t * proc)
     }
 }
 
-static void processorGetProgFromCode(processor_t * proc, FILE * prog_file);
+static proc_status_t processorGetProgFromCode(processor_t * proc, FILE * prog_file);
 void processorCtor(processor_t * proc, FILE * prog_file)
 {
     assert(proc      != NULL);
@@ -109,13 +109,38 @@ void processorCtor(processor_t * proc, FILE * prog_file)
     //initializing ip
     proc->ip = proc->prog;
 }
-static void processorGetProgFromCode(processor_t * proc, FILE * prog_file)
+
+static bool checkSignature(FILE * prog_file);
+static size_t getCodeSize(FILE * prog_file);
+static proc_status_t processorGetProgFromCode(processor_t * proc, FILE * prog_file)
 {
-    fread(&(proc->prog_size), sizeof(proc->prog_size), 1, prog_file);
+    if (!checkSignature(prog_file)){
+        PRINTFANDLOG(LOG_RELEASE, "incorrect signature\n");
+        logExit();
+        return PROC_PROG_ERROR;
+    }
+    proc->prog_size = getCodeSize(prog_file);
     proc->prog = (int *)calloc(proc->prog_size, sizeof(int));
     fread(proc->prog, sizeof(int), proc->prog_size, prog_file);
+    return PROC_SUCCESS;
 }
 
+static bool checkSignature(FILE * prog_file)
+{
+    char sign[sizeof(SIGNATURE)] = "";
+    fread(sign, sizeof(char), sizeof(SIGNATURE), prog_file);
+
+    if (strcmp(sign, SIGNATURE) == 0)
+        return true;
+    return false;
+}
+
+static size_t getCodeSize(FILE * prog_file)
+{
+    size_t size = 0;
+    fread(&size, sizeof(size_t), 1, prog_file);
+    return size;
+}
 
 void processorDtor(processor_t * proc)
 {

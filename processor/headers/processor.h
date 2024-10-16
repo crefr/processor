@@ -13,6 +13,11 @@ typedef struct
     int * ip;
 } processor_t;
 
+typedef enum {
+    PROC_SUCCESS,
+    PROC_PROG_ERROR
+} proc_status_t;
+
 void processorCtor(processor_t * proc, FILE * prog_file);
 void processorRun(processor_t * proc);
 void processorDtor(processor_t * proc);
