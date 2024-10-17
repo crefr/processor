@@ -13,7 +13,7 @@ const size_t MAXCMDLEN = 50;
 const size_t MAXPROGLEN = 50000;
 
 static int procGetArg(processor_t * proc);
-
+static void calcTwoArgs(processor_t * proc);
 void processorRun(processor_t * proc)
 {
     int quit = 0;
@@ -27,6 +27,10 @@ void processorRun(processor_t * proc)
         case POP_CMD:{
             proc->ip++;
             proc->reg[*(proc->ip)] = stackPop(proc->stk);
+            break;
+        }
+        case ADD_CMD: case SUB_CMD: case MUL_CMD: case DIV_CMD:{
+            calcTwoArgs(proc);
             break;
         }
         case JMP_CMD:{
@@ -44,18 +48,6 @@ void processorRun(processor_t * proc)
                 proc->ip++;
             break;
         }
-        case ADD_CMD:{
-            int a = stackPop(proc->stk);
-            int b = stackPop(proc->stk);
-            stackPush(proc->stk, a + b);
-            break;
-        }
-        case SUB_CMD:{
-            int a = stackPop(proc->stk);
-            int b = stackPop(proc->stk);
-            stackPush(proc->stk, b - a);
-            break;
-        }
         case OUT_CMD:{
             int out_elem = stackPop(proc->stk);
             printf("%d\n", out_elem);
@@ -71,18 +63,6 @@ void processorRun(processor_t * proc)
             quit = 1;
             break;
         }
-        case MUL_CMD:{
-            int a = stackPop(proc->stk);
-            int b = stackPop(proc->stk);
-            stackPush(proc->stk, a * b);
-            break;
-        }
-        case DIV_CMD:{
-            int a = stackPop(proc->stk);
-            int b = stackPop(proc->stk);
-            stackPush(proc->stk, b / a);
-            break;
-        }
         default:
             quit = 1;
             PRINTFANDLOG(LOG_RELEASE, "invalid instruction: %02X ", (unsigned int) *(proc->ip));
@@ -91,6 +71,35 @@ void processorRun(processor_t * proc)
         proc->ip++;
     }
 }
+static void calcTwoArgs(processor_t * proc)
+{
+    int a = stackPop(proc->stk);
+    int b = stackPop(proc->stk);
+    int ans = 0;
+    switch((*(proc->ip)) & CMDNUM_MASK){
+        case ADD_CMD:{
+            ans = a + b;
+            break;
+        }
+        case SUB_CMD:{
+            ans = b - a;
+            break;
+        }
+        case MUL_CMD:{
+            ans = a * b;
+            break;
+        }
+        case DIV_CMD:{
+            ans = b / a;
+            break;
+        }
+        default:
+            PRINTFANDLOG(LOG_RELEASE, "calcTwoArgs: wrong command\n");
+            break;
+    }
+    stackPush(proc->stk, ans);
+}
+
 
 static proc_status_t processorGetProgFromCode(processor_t * proc, FILE * prog_file);
 void processorCtor(processor_t * proc, FILE * prog_file)
