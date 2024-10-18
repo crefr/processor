@@ -16,7 +16,7 @@ int logStart(const char * logfilename, int loglevel)
         printf(">>> logger ERROR: cannot open logfile\n");
         return 0;
     }
-    logPrint(0, "\n<-----------STARTED----------->");
+    logPrint(0, "\n<-----------STARTED----------->\n");
     return 1;
 }
 
@@ -27,7 +27,7 @@ void logPrint(int loglevel, const char * fmt, ...)
         va_list va = {};
         va_start(va, fmt);
         vfprintf(LOGfile, fmt, va);
-        fprintf(LOGfile, "\n");
+        //fprintf(LOGfile, "\n");
         va_end(va);
     }
 }

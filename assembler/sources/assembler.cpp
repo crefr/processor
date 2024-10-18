@@ -14,9 +14,17 @@ typedef struct {
     int * ip;
 } label_t;
 
+typedef struct {
+    int * ip;
+    size_t label_id;
+} fixup_label_t;
+
 const size_t MAX_LABELS_NUM = 10;
+const size_t MAX_FIXUPS_NUM = 100;
 typedef struct {
     label_t labels[MAX_LABELS_NUM];
+    fixup_label_t fixups[MAX_FIXUPS_NUM];
+    size_t fixup_top;
     size_t top;
 } label_list_t;
 
@@ -41,6 +49,8 @@ static void scanPushArgs(program_t * prog);
 static enum commands getCmdByStr(const char * str);
 static void handleLableInJmps(program_t * prog, label_list_t * labels);
 static void handleLabelInCode(program_t * prog, label_list_t * labels, const char * label_name);
+static void fixupLabels(program_t * prog, label_list_t * labels);
+static void labelDump(program_t * prog, label_list_t * labels);
 size_t assembleRun(program_t * prog)
 {
     assert(prog);
@@ -84,10 +94,14 @@ size_t assembleRun(program_t * prog)
             *(prog->ip++) = (int) cmd_id;
             continue;
         default:
-            PRINTFANDLOG(LOG_RELEASE, "SYNTAX ERROR: \"%s\" in command %zu, (scanned as %d)\n", cmd, (size_t)(prog->ip - prog->program), cmd_id);
+            PRINTFANDLOG(LOG_RELEASE, "SYNTAX ERROR: \"%s\" in command %zu, (scanned as %d)\n",
+                        cmd, (size_t)(prog->ip - prog->program), cmd_id);
             return 0;
         }
     }
+    labelDump(prog, &labels);
+    fixupLabels(prog, &labels);
+    labelDump(prog, &labels);
     prog->size = (size_t)(prog->ip - prog->program);
     return prog->size;
 }
@@ -169,8 +183,7 @@ static void handleLableInJmps(program_t * prog, label_list_t * labels)
     assert(prog);
     assert(labels);
     char label_str[ARGMAXLEN] = "";
-    size_t label_size = 0;
-    fscanf(prog->in_file, " %s%n ", label_str, &label_size);
+    fscanf(prog->in_file, " %s ", label_str);
 
     if (strchr(label_str, ':') != NULL){
         logPrint(LOG_DEBUG, "found lable in jmp: %s\n", label_str);
@@ -185,8 +198,14 @@ static void handleLableInJmps(program_t * prog, label_list_t * labels)
             *prog->ip = -1;
             strcpy(labels->labels[labels->top].name, label_str);
             labels->labels[labels->top].ip = NULL;
+
+            labels->fixups[labels->fixup_top].ip = prog->ip;
+            labels->fixups[labels->fixup_top].label_id = labels->top;
+
+            labels->fixup_top++;
             labels->top++;
             prog->ip++;
+
         }
     }
     else {
@@ -227,4 +246,44 @@ static label_t * findLabelInList(label_list_t * labels, const char * name)
             return &(labels->labels[index]);
     }
     return NULL;
+}
+
+static void fixupLabels(program_t * prog, label_list_t * labels)
+{
+    assert(prog);
+    assert(labels);
+    logPrint(LOG_DEBUG, "making fixups, total: %zu\n", labels->fixup_top);
+    for (size_t fixup_index = 0; fixup_index < labels->fixup_top; fixup_index++){
+        logPrint(LOG_DEBUG, "\tmaking fixup #%zu / %zu, label %s\n",
+                fixup_index + 1, labels->fixup_top, labels->labels[labels->fixups[fixup_index].label_id].name);
+        int * addr_to_fix = labels->fixups[fixup_index].ip;
+        int * new_addr = labels->labels[labels->fixups[fixup_index].label_id].ip;
+
+        *(addr_to_fix) = (int)(new_addr - prog->program);
+    }
+    logPrint(LOG_DEBUG, "end of fixups\n\n", labels->fixup_top);
+}
+
+static void labelDump(program_t * prog, label_list_t * labels)
+{
+    logPrint(LOG_DEBUG, "\n-----LABELS_DUMP-----\n");
+    logPrint(LOG_DEBUG, "num of labels: %zu\n", labels->top);
+    logPrint(LOG_DEBUG, "labels:\n");
+    for (size_t label_index = 0; label_index < labels->top; label_index++){
+        logPrint(LOG_DEBUG, "\tlabel #%zu:\n", label_index + 1);
+        logPrint(LOG_DEBUG, "\t\tname: %s\n",  labels->labels[label_index].name);
+        logPrint(LOG_DEBUG, "\t\tip:   %d\n", (int)(labels->labels[label_index].ip - prog->program));
+    }
+    logPrint(LOG_DEBUG, "num of fixups: %zu\n", labels->fixup_top);
+    if (labels->fixup_top > 0){
+        logPrint(LOG_DEBUG, "fixups:\n");
+        for (size_t fixup_index = 0; fixup_index < labels->fixup_top; fixup_index++){
+            logPrint(LOG_DEBUG, "\tfixup #%zu:\n", fixup_index + 1);
+            logPrint(LOG_DEBUG, "\t\tip:         %d\n", (int)(labels->fixups[fixup_index].ip - prog->program));
+            logPrint(LOG_DEBUG, "\t\tlabel id:   %zu\n", labels->fixups[fixup_index].label_id);
+            logPrint(LOG_DEBUG, "\t\tlabel name: %s\n" , labels->labels[labels->fixups[fixup_index].label_id].name);
+        }
+    }
+
+    logPrint(LOG_DEBUG, "---LABELS_DUMP_END---\n\n");
 }
