@@ -6,8 +6,8 @@
 
 int main()
 {
-    logStart("log.txt", LOG_DEBUG);
-    FILE * prog_file = fopen("../program_code.txt", "r");
+    logStart("spulog.txt", LOG_DEBUG);
+    FILE * prog_file = fopen("program_code.txt", "r");
 
     processor_t proc = {};
 

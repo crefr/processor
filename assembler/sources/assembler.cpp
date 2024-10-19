@@ -37,6 +37,7 @@ static void handleLableInJmps(program_t * prog, label_list_t * labels);
 static void handleLabelInCode(program_t * prog, label_list_t * labels, const char * label_name);
 static void fixupLabels(program_t * prog, label_list_t * labels);
 static void labelDump(program_t * prog, label_list_t * labels);
+static void skipComment(FILE * file, const char skip_until);
 
 program_t progCtor(int * program, FILE * in_file, FILE * out_file, FILE * out_text_file)
 {
@@ -59,6 +60,10 @@ size_t assembleRun(program_t * prog)
     label_list_t labels = {};
     char cmd[MAXCMDLEN] = "";
     while (fscanf(prog->in_file, "%s", cmd) > 0){
+        if (strchr(cmd, COMMENT_CHAR) != NULL){
+            skipComment(prog->in_file, '\n');
+            continue;
+        }
         if (strchr(cmd, ':') != NULL){
             handleLabelInCode(prog, &labels, cmd);
             continue;
@@ -111,6 +116,11 @@ size_t assembleRun(program_t * prog)
     labelDump(prog, &labels);
     prog->size = (size_t)(prog->ip - prog->program);
     return prog->size;
+}
+
+static void skipComment(FILE * file, const char skip_until)
+{
+    while(fgetc(file) != skip_until);
 }
 
 static enum commands getCmdByStr(const char * str)

@@ -221,22 +221,26 @@ void processorDump(processor_t * proc)
 {
     logPrint(LOG_DEBUG, "\n-------------PROCESSOR_DUMP-------------\n");
     logPrint(LOG_DEBUG, "processor at %p\n", proc);
-    logPrint(LOG_DEBUG, "\tprog [%p]:\n", proc->prog);
-    logPrint(LOG_DEBUG, "\t\t");
+    logPrint(LOG_DEBUG, "prog [%p]:\n", proc->prog);
+    logPrint(LOG_DEBUG, "\t");
     for (size_t cmd_index = 0; cmd_index < proc->prog_size; cmd_index++)
         logPrint(LOG_DEBUG, "%4zu ", cmd_index);
     logPrint(LOG_DEBUG, "\n");
-    logPrint(LOG_DEBUG, "\t\t");
+    logPrint(LOG_DEBUG, "\t");
     for (size_t cmd_index = 0; cmd_index < proc->prog_size; cmd_index++)
         logPrint(LOG_DEBUG, "%4d ", proc->prog[cmd_index]);
-    logPrint(LOG_DEBUG, "\n\t\t");
+    logPrint(LOG_DEBUG, "\n\t");
     for (size_t cmd_skip = 0; cmd_skip < (size_t)((proc->ip) - (proc->prog)); cmd_skip++)
         logPrint(LOG_DEBUG, "     ");
     logPrint(LOG_DEBUG, "   ^ ip = %zu\n", proc->ip - proc->prog);
 
-    logPrint(LOG_DEBUG, "\tregisters: \n");
+    logPrint(LOG_DEBUG, "call stack: \n");
+    for (size_t index = 0; index < proc->call_stk->size; index++)
+        logPrint(LOG_DEBUG, "\t%zu: %04d\n", index, proc->call_stk->data[index]);
+
+    logPrint(LOG_DEBUG, "registers: \n");
     for (size_t reg_index = 0; reg_index < REGNUM; reg_index++){
-        logPrint(LOG_DEBUG, "\t\treg 0x%02X: %d\n", reg_index, proc->reg[reg_index]);
+        logPrint(LOG_DEBUG, "\treg 0x%02X: %d\n", reg_index, proc->reg[reg_index]);
     }
     logPrint(LOG_DEBUG, "-----------PROCESSOR_DUMP_END-----------\n\n");
 }

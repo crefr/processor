@@ -10,6 +10,8 @@ typedef struct {
     int * program;
 }program_t;
 
+const char COMMENT_CHAR = ';';
+
 program_t progCtor(int * program, FILE * in_file, FILE * out_file, FILE * out_text_file);
 void progToCode(program_t * prog);
 void progToText(program_t * prog);
