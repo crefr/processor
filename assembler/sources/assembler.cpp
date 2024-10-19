@@ -139,25 +139,25 @@ static void scanPushArgs(program_t * prog)
     int digit_arg = 0;
     int reg_arg   = 0;
     char reg_str[ARGMAXLEN + 1] = "";
-    int push_cmd_code = PUSH_CMD;
+    int cmd_code = *(prog->ip);
 
     if (fscanf(prog->in_file, "%d", &digit_arg) != 0){
-        push_cmd_code |= DIG_MASK;
-        *(prog->ip++) = push_cmd_code;
+        cmd_code |= IMM_MASK;
+        *(prog->ip++) = cmd_code;
         *prog->ip     = digit_arg;
     }
     else{
         fscanf(prog->in_file, " %s ", reg_str);
-        push_cmd_code |= REG_MASK;
+        cmd_code |= REG_MASK;
         reg_arg = toupper(reg_str[1]) - 'A' + 1;
         if (fscanf(prog->in_file, "%d", &digit_arg) != 0){
-            push_cmd_code |= DIG_MASK;
-            *(prog->ip++) = push_cmd_code;
+            cmd_code |= IMM_MASK;
+            *(prog->ip++) = cmd_code;
             *(prog->ip++) = reg_arg;
             *prog->ip     = digit_arg;
         }
         else{
-            *(prog->ip++) = push_cmd_code;
+            *(prog->ip++) = cmd_code;
             *prog->ip     = reg_arg;
         }
     }
@@ -174,8 +174,11 @@ signature    num of tokens (size_t)
 static void writeHeader(FILE * out_file, size_t prog_size)
 {
     assert(out_file);
-    fwrite(SIGNATURE, sizeof(SIGNATURE), 1, out_file);
-    fwrite(&prog_size, sizeof(prog_size), 1, out_file);
+    header_t head = {};
+    head.sign = SIGNATURE;
+    head.size = prog_size;
+    head.version = COMMAND_VERSION;
+    fwrite(&head, sizeof(head), 1, out_file);
 }
 
 void progToText(program_t * prog)

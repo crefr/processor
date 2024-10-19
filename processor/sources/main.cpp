@@ -11,7 +11,10 @@ int main()
 
     processor_t proc = {};
 
-    processorCtor(&proc, prog_file);
+    if (processorCtor(&proc, prog_file) != PROC_SUCCESS){
+        processorDtor(&proc);
+        return 1;
+    }
     processorRun (&proc);
     processorDtor(&proc);
     logExit();

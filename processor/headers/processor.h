@@ -11,6 +11,7 @@ typedef struct
     stack_t * stk;
     stack_t * call_stk;
     int reg[REGNUM];
+    int * RAM;
     int * ip;
 } processor_t;
 
@@ -19,7 +20,7 @@ typedef enum {
     PROC_PROG_ERROR
 } proc_status_t;
 
-void processorCtor(processor_t * proc, FILE * prog_file);
+proc_status_t processorCtor(processor_t * proc, FILE * prog_file);
 void processorRun(processor_t * proc);
 void processorDtor(processor_t * proc);
 
