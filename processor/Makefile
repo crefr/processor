@@ -1,7 +1,9 @@
-FILENAME = run.exe
+FILENAME = ../spu.exe
 OBJDIR = Obj/
 SRCDIR = sources/
 HEADDIR = headers/
+GLOBALHEADDIR = ../global/headers/
+GLOBALSRCDIR  = ../global/sources/
 
 CC = g++
 BUILD  = RELEASE
@@ -12,10 +14,10 @@ CFLAGS_WINDOWS =-Wshadow -Winit-self -Wredundant-decls -Wcast-align -Wundef -Wfl
 		-Wempty-body -Wformat-security -Wformat=2 -Wignored-qualifiers -Wlogical-op -Wno-missing-field-initializers 	\
 		-Wnon-virtual-dtor -Woverloaded-virtual -Wpointer-arith -Wsign-promo -Wstack-usage=8192 -Wstrict-aliasing 		\
 		-Wstrict-null-sentinel -Wtype-limits -Wwrite-strings -Werror=vla -D_DEBUG -D_EJUDGE_CLIENT_SIDE					\
-		-I./$(HEADDIR)
+		-I./$(HEADDIR) -I./$(GLOBALHEADDIR)
 
 # linux
-CFLAGS_LINUX = -I./$(HEADDIR) -D _DEBUG -ggdb3 -std=c++17 -O0 -Wall -Wextra -Weffc++ -Waggressive-loop-optimizations 		\
+CFLAGS_LINUX = -I./$(HEADDIR) -I./$(GLOBALHEADDIR) -D _DEBUG -ggdb3 -std=c++17 -O0 -Wall -Wextra -Weffc++ -Waggressive-loop-optimizations 		\
 		-Wc++14-compat -Wmissing-declarations -Wcast-align -Wcast-qual -Wchar-subscripts -Wconditionally-supported 			\
 		-Wconversion -Wctor-dtor-privacy -Wempty-body -Wfloat-equal -Wformat-nonliteral -Wformat-security 					\
 		-Wformat-signedness -Wformat=2 -Winline -Wlogical-op -Wnon-virtual-dtor -Wopenmp-simd -Woverloaded-virtual 			\
@@ -28,7 +30,7 @@ CFLAGS_LINUX = -I./$(HEADDIR) -D _DEBUG -ggdb3 -std=c++17 -O0 -Wall -Wextra -Wef
 		-Werror=vla -fsanitize=address,alignment,bool,bounds,enum,float-cast-overflow,float-divide-by-zero,integer-divide-by-zero,leak,nonnull-attribute,null,object-size,return,returns-nonnull-attribute,shift,signed-integer-overflow,undefined,unreachable,vla-bound,vptr
 
 # release
-CFLAGS_RELEASE = -I./$(HEADDIR) -O3
+CFLAGS_RELEASE = -I./$(HEADDIR) -I./$(GLOBALHEADDIR) -O3
 
 ifeq ($(BUILD),WIN)
 	CFLAGS = $(CFLAGS_WINDOWS)
@@ -41,20 +43,21 @@ endif
 $(FILENAME): $(OBJDIR)main.o $(OBJDIR)mystack.o $(OBJDIR)logger.o $(OBJDIR)hash.o $(OBJDIR)processor.o
 	$(CC) $(CFLAGS) $^ -o $@
 
-$(OBJDIR)main.o: $(SRCDIR)main.cpp $(HEADDIR)mystack.h $(HEADDIR)logger.h $(HEADDIR)processor.h
+$(OBJDIR)main.o: $(SRCDIR)main.cpp $(GLOBALHEADDIR)mystack.h $(GLOBALHEADDIR)logger.h $(HEADDIR)processor.h
 	mkdir -p $(OBJDIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(OBJDIR)mystack.o: $(SRCDIR)mystack.cpp $(HEADDIR)mystack.h $(HEADDIR)logger.h
+$(OBJDIR)mystack.o: $(GLOBALSRCDIR)mystack.cpp $(GLOBALHEADDIR)mystack.h $(GLOBALHEADDIR)logger.h
 	mkdir -p $(OBJDIR)
 	$(CC) $(CFLAGS) -c $< -o $@
-$(OBJDIR)logger.o: $(SRCDIR)logger.cpp $(HEADDIR)logger.h
+$(OBJDIR)logger.o: $(GLOBALSRCDIR)logger.cpp $(GLOBALHEADDIR)logger.h
 	mkdir -p $(OBJDIR)
 	$(CC) $(CFLAGS) -c $< -o $@
-$(OBJDIR)hash.o: $(SRCDIR)hash.cpp $(HEADDIR)hash.h
+$(OBJDIR)hash.o: $(GLOBALSRCDIR)hash.cpp $(GLOBALHEADDIR)hash.h
 	mkdir -p $(OBJDIR)
 	$(CC) $(CFLAGS) -c $< -o $@
-$(OBJDIR)processor.o: $(SRCDIR)processor.cpp $(HEADDIR)processor.h $(HEADDIR)mystack.h
+
+$(OBJDIR)processor.o: $(SRCDIR)processor.cpp $(HEADDIR)processor.h $(GLOBALHEADDIR)mystack.h
 	mkdir -p $(OBJDIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 

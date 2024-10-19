@@ -1,21 +1,11 @@
 in
-pop         rbx
-
-push        0
 pop         rax
-
-
-push        rax
-push        rax
-mul
-out
-jmp         START:
-
-push        rax 1
-pop         rax
-
-push        rax
-push        rbx
-
+call        PRINT:
 
 hlt
+
+PRINT:
+    push        rax
+    out
+    call        PRINT:
+ret

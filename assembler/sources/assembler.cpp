@@ -6,7 +6,7 @@
 #include <assert.h>
 
 #include "assembler.h"
-#include "../../comands.h"
+#include "comands.h"
 #include "logger.h"
 
 typedef struct {
@@ -30,6 +30,14 @@ typedef struct {
 
 const size_t MAXCMDLEN  = 50;
 
+
+static void scanPushArgs(program_t * prog);
+static enum commands getCmdByStr(const char * str);
+static void handleLableInJmps(program_t * prog, label_list_t * labels);
+static void handleLabelInCode(program_t * prog, label_list_t * labels, const char * label_name);
+static void fixupLabels(program_t * prog, label_list_t * labels);
+static void labelDump(program_t * prog, label_list_t * labels);
+
 program_t progCtor(int * program, FILE * in_file, FILE * out_file, FILE * out_text_file)
 {
     assert(program);
@@ -45,12 +53,6 @@ program_t progCtor(int * program, FILE * in_file, FILE * out_file, FILE * out_te
     return prog;
 }
 
-static void scanPushArgs(program_t * prog);
-static enum commands getCmdByStr(const char * str);
-static void handleLableInJmps(program_t * prog, label_list_t * labels);
-static void handleLabelInCode(program_t * prog, label_list_t * labels, const char * label_name);
-static void fixupLabels(program_t * prog, label_list_t * labels);
-static void labelDump(program_t * prog, label_list_t * labels);
 size_t assembleRun(program_t * prog)
 {
     assert(prog);
@@ -63,40 +65,45 @@ size_t assembleRun(program_t * prog)
         }
         enum commands cmd_id = getCmdByStr(cmd);
         switch(cmd_id){
-        case PUSH_CMD:{
-            scanPushArgs(prog);
-            prog->ip++;
-            continue;
-        }
-        case POP_CMD:{
-            int pop_cmd_code = POP_CMD | REG_MASK;
-            char reg_str[ARGMAXLEN + 1] = "";
-            fscanf(prog->in_file, "%s", reg_str);
-            int reg_num = reg_str[1] - 'a' + 1;
-            *(prog->ip++) = pop_cmd_code;
-            *(prog->ip++)     = reg_num;
-            continue;
-        }
-        case JMP_CMD: case JA_CMD:{
-            *(prog->ip++) = cmd_id;
-            handleLableInJmps(prog, &labels);
-            continue;
-        }
-        case ADD_CMD: case SUB_CMD: case MUL_CMD: case DIV_CMD:{
-            *(prog->ip++) = (int) cmd_id;
-            continue;
-        }
-        case OUT_CMD: case IN_CMD:{
-            *(prog->ip++) = (int) cmd_id;
-            continue;
-        }
-        case HLT_CMD:
-            *(prog->ip++) = (int) cmd_id;
-            continue;
-        default:
-            PRINTFANDLOG(LOG_RELEASE, "SYNTAX ERROR: \"%s\" in command %zu, (scanned as %d)\n",
-                        cmd, (size_t)(prog->ip - prog->program), cmd_id);
-            return 0;
+            case PUSH_CMD:{
+                scanPushArgs(prog);
+                prog->ip++;
+                continue;
+            }
+            case POP_CMD:{
+                int pop_cmd_code = POP_CMD | REG_MASK;
+                char reg_str[ARGMAXLEN + 1] = "";
+                fscanf(prog->in_file, "%s", reg_str);
+                int reg_num = reg_str[1] - 'a' + 1;
+                *(prog->ip++) = pop_cmd_code;
+                *(prog->ip++)     = reg_num;
+                continue;
+            }
+            case JMP_CMD: case JA_CMD: case JB_CMD: case JAE_CMD: case JBE_CMD:
+            case CALL_CMD: {
+                *(prog->ip++) = cmd_id;
+                handleLableInJmps(prog, &labels);
+                continue;
+            }
+            case ADD_CMD: case SUB_CMD: case MUL_CMD: case DIV_CMD:{
+                *(prog->ip++) = (int) cmd_id;
+                continue;
+            }
+            case RET_CMD:{
+                *(prog->ip++) = (int) cmd_id;
+                continue;
+            }
+            case OUT_CMD: case IN_CMD:{
+                *(prog->ip++) = (int) cmd_id;
+                continue;
+            }
+            case HLT_CMD:
+                *(prog->ip++) = (int) cmd_id;
+                continue;
+            default:
+                PRINTFANDLOG(LOG_RELEASE, "SYNTAX ERROR: \"%s\" in command %zu, (scanned as %d)\n",
+                            cmd, (size_t)(prog->ip - prog->program), cmd_id);
+                return 0;
         }
     }
     labelDump(prog, &labels);
@@ -284,6 +291,5 @@ static void labelDump(program_t * prog, label_list_t * labels)
             logPrint(LOG_DEBUG, "\t\tlabel name: %s\n" , labels->labels[labels->fixups[fixup_index].label_id].name);
         }
     }
-
     logPrint(LOG_DEBUG, "---LABELS_DUMP_END---\n\n");
 }

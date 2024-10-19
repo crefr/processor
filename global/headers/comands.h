@@ -24,6 +24,13 @@ enum commands
 
     JMP_CMD,
     JA_CMD,
+    JB_CMD,
+    JAE_CMD,
+    JBE_CMD,
+
+    CALL_CMD,
+    RET_CMD,
+
     HLT_CMD = 0
 };
 
@@ -48,13 +55,18 @@ const command_t Commands[] =
     {"pop"  , POP_CMD  },
     {"jmp"  , JMP_CMD  },
     {"ja"   , JA_CMD   },
+    {"jb"   , JB_CMD   },
+    {"jae"  , JAE_CMD  },
+    {"jbe"  , JBE_CMD  },
     {"add"  , ADD_CMD  },
     {"sub"  , SUB_CMD  },
     {"mul"  , MUL_CMD  },
     {"div"  , DIV_CMD  },
     {"out"  , OUT_CMD  },
     {"in"   , IN_CMD   },
-    {"hlt"  , HLT_CMD  }
+    {"hlt"  , HLT_CMD  },
+    {"call" , CALL_CMD },
+    {"ret"  ,  RET_CMD }
 };
 const size_t Cmd_Num = sizeof(Commands) / sizeof(command_t);
 
