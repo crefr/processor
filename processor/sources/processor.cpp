@@ -194,7 +194,7 @@ static int * GetPushPopArg(processor_t * proc)
     if (mem){
         result = proc->RAM;
         if (reg)
-            result += *(proc->ip++);
+            result += proc->reg[*(proc->ip++)];
         if (imm)
             result += *(proc->ip++);
         return result;
@@ -261,6 +261,10 @@ void processorDump(processor_t * proc)
     logPrint(LOG_DEBUG, "call stack: \n");
     for (size_t index = 0; index < proc->call_stk->size; index++)
         logPrint(LOG_DEBUG, "\t%zu: %04d\n", index, proc->call_stk->data[index]);
+
+    logPrint(LOG_DEBUG, "RAM: \n");
+    for (size_t index = 0; index < RAM_SIZE; index++)
+        logPrint(LOG_DEBUG, "\t%zu: %04d\n", index, proc->RAM[index]);
 
     logPrint(LOG_DEBUG, "registers: \n");
     for (size_t reg_index = 0; reg_index < REGNUM; reg_index++){

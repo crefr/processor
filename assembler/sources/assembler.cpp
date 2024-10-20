@@ -31,7 +31,7 @@ typedef struct {
 const size_t MAXCMDLEN  = 50;
 
 
-static void scanPushArgs(program_t * prog);
+static void scanPushArgs(program_t * prog, enum commands cmd_id);
 static enum commands getCmdByStr(const char * str);
 static void handleLableInJmps(program_t * prog, label_list_t * labels);
 static void handleLabelInCode(program_t * prog, label_list_t * labels, const char * label_name);
@@ -71,17 +71,13 @@ size_t assembleRun(program_t * prog)
         enum commands cmd_id = getCmdByStr(cmd);
         switch(cmd_id){
             case PUSH_CMD:{
-                scanPushArgs(prog);
+                scanPushArgs(prog, cmd_id);
                 prog->ip++;
                 continue;
             }
             case POP_CMD:{
-                int pop_cmd_code = POP_CMD | REG_MASK;
-                char reg_str[ARGMAXLEN + 1] = "";
-                fscanf(prog->in_file, "%s", reg_str);
-                int reg_num = reg_str[1] - 'a' + 1;
-                *(prog->ip++) = pop_cmd_code;
-                *(prog->ip++)     = reg_num;
+                scanPushArgs(prog, cmd_id);
+                prog->ip++;
                 continue;
             }
             case JMP_CMD: case JA_CMD: case JB_CMD: case JAE_CMD: case JBE_CMD:
@@ -133,24 +129,42 @@ static enum commands getCmdByStr(const char * str)
     return ERROR_CMD;
 }
 
-static void scanPushArgs(program_t * prog)
+static void scanArgStrFromFile(FILE * stream, char * str);
+static void scanPushArgs(program_t * prog, enum commands cmd_id)
 {
     assert(prog);
     int digit_arg = 0;
     int reg_arg   = 0;
+    char scanned_str[10000 + 1] = "";
+    char str[10000 + 1] = "";
     char reg_str[ARGMAXLEN + 1] = "";
-    int cmd_code = *(prog->ip);
+    int cmd_code = cmd_id;
 
-    if (fscanf(prog->in_file, "%d", &digit_arg) != 0){
+    scanArgStrFromFile(prog->in_file, scanned_str);
+    printf("<<<%s>>>\n", scanned_str);
+
+    int amogus = 0;
+    if ((amogus = sscanf(scanned_str, " [%[^]] ", str)) > 0) {
+        printf("amogus = %d\n", amogus);
+        cmd_code |= MEM_MASK;
+        strcpy(scanned_str, str);
+    }
+    printf("<<<%s>>>\n", scanned_str);
+
+    int scanned_chs = 0;
+    if (sscanf(scanned_str, "%d%n", &digit_arg, &scanned_chs) > 0){
+        printf("<<<<<<%d\n", digit_arg);
         cmd_code |= IMM_MASK;
         *(prog->ip++) = cmd_code;
         *prog->ip     = digit_arg;
     }
     else{
-        fscanf(prog->in_file, " %s ", reg_str);
+        sscanf(scanned_str, " %s%n ", reg_str, &scanned_chs);
+        printf("<<<<<<%s\n", reg_str);
         cmd_code |= REG_MASK;
         reg_arg = toupper(reg_str[1]) - 'A' + 1;
-        if (fscanf(prog->in_file, "%d", &digit_arg) != 0){
+        if (sscanf(scanned_str + scanned_chs, "%d", &digit_arg) > 0){
+            printf("<<<<<<%d\n", digit_arg);
             cmd_code |= IMM_MASK;
             *(prog->ip++) = cmd_code;
             *(prog->ip++) = reg_arg;
@@ -305,4 +319,17 @@ static void labelDump(program_t * prog, label_list_t * labels)
         }
     }
     logPrint(LOG_DEBUG, "---LABELS_DUMP_END---\n\n");
+}
+
+static void scanArgStrFromFile(FILE * stream, char * str)
+{
+    char c = '\0';
+    while (isspace(c = fgetc(stream)));
+
+    size_t index = 0;
+    while (c != '\n' && c != COMMENT_CHAR){
+        str[index] = c;
+        index++;
+        c = fgetc(stream);
+    }
 }
