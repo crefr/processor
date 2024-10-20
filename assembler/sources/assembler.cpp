@@ -73,34 +73,37 @@ size_t assembleRun(program_t * prog)
             case PUSH_CMD:{
                 scanPushArgs(prog, cmd_id);
                 prog->ip++;
-                continue;
+                break;
             }
             case POP_CMD:{
                 scanPushArgs(prog, cmd_id);
                 prog->ip++;
-                continue;
+                break;
             }
             case JMP_CMD: case JA_CMD: case JB_CMD: case JAE_CMD: case JBE_CMD:
             case CALL_CMD: {
                 *(prog->ip++) = cmd_id;
                 handleLableInJmps(prog, &labels);
-                continue;
+                break;
             }
             case ADD_CMD: case SUB_CMD: case MUL_CMD: case DIV_CMD:{
                 *(prog->ip++) = (int) cmd_id;
-                continue;
+                break;
             }
             case RET_CMD:{
                 *(prog->ip++) = (int) cmd_id;
-                continue;
+                break;
             }
             case OUT_CMD: case IN_CMD:{
                 *(prog->ip++) = (int) cmd_id;
-                continue;
+                break;
             }
+            case DRAW_CMD:
+                *(prog->ip++) = (int) cmd_id;
+                break;
             case HLT_CMD:
                 *(prog->ip++) = (int) cmd_id;
-                continue;
+                break;
             default:
                 PRINTFANDLOG(LOG_RELEASE, "SYNTAX ERROR: \"%s\" in command %zu, (scanned as %d)\n",
                             cmd, (size_t)(prog->ip - prog->program), cmd_id);
@@ -135,36 +138,32 @@ static void scanPushArgs(program_t * prog, enum commands cmd_id)
     assert(prog);
     int digit_arg = 0;
     int reg_arg   = 0;
-    char scanned_str[10000 + 1] = "";
-    char str[10000 + 1] = "";
+
+    const size_t MAX_STR_LEN = 10000;
+    char scanned_str[MAX_STR_LEN + 1] = "";
+    char str[MAX_STR_LEN + 1] = "";
     char reg_str[ARGMAXLEN + 1] = "";
     int cmd_code = cmd_id;
 
     scanArgStrFromFile(prog->in_file, scanned_str);
-    printf("<<<%s>>>\n", scanned_str);
 
     int amogus = 0;
-    if ((amogus = sscanf(scanned_str, " [%[^]] ", str)) > 0) {
-        printf("amogus = %d\n", amogus);
+    if ((amogus = sscanf(scanned_str, " [%[^]] ", str)) > 0) {;
         cmd_code |= MEM_MASK;
         strcpy(scanned_str, str);
     }
-    printf("<<<%s>>>\n", scanned_str);
 
     int scanned_chs = 0;
     if (sscanf(scanned_str, "%d%n", &digit_arg, &scanned_chs) > 0){
-        printf("<<<<<<%d\n", digit_arg);
         cmd_code |= IMM_MASK;
         *(prog->ip++) = cmd_code;
         *prog->ip     = digit_arg;
     }
     else{
         sscanf(scanned_str, " %s%n ", reg_str, &scanned_chs);
-        printf("<<<<<<%s\n", reg_str);
         cmd_code |= REG_MASK;
         reg_arg = toupper(reg_str[1]) - 'A' + 1;
         if (sscanf(scanned_str + scanned_chs, "%d", &digit_arg) > 0){
-            printf("<<<<<<%d\n", digit_arg);
             cmd_code |= IMM_MASK;
             *(prog->ip++) = cmd_code;
             *(prog->ip++) = reg_arg;
@@ -332,4 +331,6 @@ static void scanArgStrFromFile(FILE * stream, char * str)
         index++;
         c = fgetc(stream);
     }
+    if (c == COMMENT_CHAR)
+        skipComment(stream, '\n');
 }

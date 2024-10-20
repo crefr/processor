@@ -35,6 +35,8 @@ enum commands
     CALL_CMD,
     RET_CMD,
 
+    DRAW_CMD,
+
     HLT_CMD = 0
 };
 
@@ -72,7 +74,8 @@ const command_t Commands[] =
     {"in"   , IN_CMD   },
     {"hlt"  , HLT_CMD  },
     {"call" , CALL_CMD },
-    {"ret"  ,  RET_CMD }
+    {"ret"  , RET_CMD  },
+    {"draw" , DRAW_CMD }
 };
 const size_t Cmd_Num = sizeof(Commands) / sizeof(command_t);
 
@@ -84,7 +87,7 @@ const int REG_MASK = 0x40;
 const int MEM_MASK = 0x80;
 
 const uint64_t SIGNATURE = * (const uint64_t *)"*crefr++";
-const uint64_t COMMAND_VERSION = 2;
+const uint64_t COMMAND_VERSION = 3;
 typedef struct {
     uint64_t sign;
     uint32_t version;

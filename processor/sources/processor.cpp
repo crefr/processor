@@ -17,6 +17,8 @@ static void calcTwoArgs(processor_t * proc);
 static void condJump(processor_t * proc);
 static int * GetPushPopArg(processor_t * proc);
 
+static void drawRAM(processor_t * proc, size_t width);
+
 void processorRun(processor_t * proc)
 {
     assert(proc);
@@ -64,6 +66,11 @@ void processorRun(processor_t * proc)
                 int in_elem = 0;
                 scanf("%d", &in_elem);
                 stackPush(proc->stk, in_elem);
+                proc->ip++;
+                break;
+            }
+            case DRAW_CMD:{
+                drawRAM(proc, DRAW_WIDTH);
                 proc->ip++;
                 break;
             }
@@ -126,6 +133,7 @@ proc_status_t processorCtor(processor_t * proc, FILE * prog_file)
 
     //getting RAM
     proc->RAM = (int *)calloc(RAM_SIZE, sizeof(int));
+    proc->RAM_size = RAM_SIZE;
 
     //getting the program
     if (processorGetProgFromCode(proc, prog_file) != PROC_SUCCESS){
@@ -264,12 +272,29 @@ void processorDump(processor_t * proc)
 
     logPrint(LOG_DEBUG, "RAM: \n");
     for (size_t index = 0; index < RAM_SIZE; index++)
-        logPrint(LOG_DEBUG, "\t%zu: %04d\n", index, proc->RAM[index]);
+        logPrint(LOG_DEBUG, "\t%04zu: %04d\n", index, proc->RAM[index]);
 
     logPrint(LOG_DEBUG, "registers: \n");
     for (size_t reg_index = 0; reg_index < REGNUM; reg_index++){
         logPrint(LOG_DEBUG, "\treg 0x%02X: %d\n", reg_index, proc->reg[reg_index]);
     }
     logPrint(LOG_DEBUG, "-----------PROCESSOR_DUMP_END-----------\n\n");
+}
+
+const char WHITE_CHAR = '*';
+const char BLACK_CHAR = '.';
+static void drawRAM(processor_t * proc, size_t width)
+{
+    for (size_t mem_index = 0; mem_index < proc->RAM_size; mem_index++){
+        if (mem_index % width == 0 && mem_index != 0)
+            putchar('\n');
+        if (proc->RAM[mem_index] != 0)
+            putchar(BLACK_CHAR);
+        else
+            putchar(WHITE_CHAR);
+    }
+    putchar('\n');
+    fflush(stdout);
+    printf("\033[%zuD\033[%zuA", width, proc->RAM_size / width);
 }
 

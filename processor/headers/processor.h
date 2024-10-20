@@ -12,6 +12,7 @@ typedef struct
     stack_t * call_stk;
     int reg[REGNUM];
     int * RAM;
+    size_t RAM_size;
     int * ip;
 } processor_t;
 
@@ -25,5 +26,7 @@ void processorRun(processor_t * proc);
 void processorDtor(processor_t * proc);
 
 void processorDump(processor_t * proc);
+
+const size_t DRAW_WIDTH = 10;
 
 #endif
