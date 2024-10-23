@@ -6,7 +6,7 @@
 
 int main()
 {
-    logStart("spulog.txt", LOG_DEBUG);
+    logStart("spulog.txt", LOG_RELEASE);
     FILE * prog_file = fopen("program_code.txt", "r");
 
     processor_t proc = {};

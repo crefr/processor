@@ -11,7 +11,7 @@
 
 const size_t MAXCMDLEN = 50;
 const size_t MAXPROGLEN = 50000;
-const size_t RAM_SIZE = 20;
+const size_t RAM_SIZE = 96 * 36;
 
 static void calcTwoArgs(processor_t * proc);
 static void condJump(processor_t * proc);
@@ -24,7 +24,7 @@ void processorRun(processor_t * proc)
     assert(proc);
     int quit = 0;
     while (proc->ip < proc->ip + proc->prog_size && quit != 1){
-        processorDump(proc);
+        //processorDump(proc);
         switch ((*(proc->ip)) & CMDNUM_MASK){
             case PUSH_CMD:{
                 stackPush(proc->stk, *GetPushPopArg(proc));
@@ -283,18 +283,20 @@ void processorDump(processor_t * proc)
 
 const char WHITE_CHAR = '*';
 const char BLACK_CHAR = '.';
+// const char * RET_STRING = "\033[96D\033[36A";
+const char * RET_STRING = "\033[3J\r";
 static void drawRAM(processor_t * proc, size_t width)
 {
+    fputs(RET_STRING, stdout);
     for (size_t mem_index = 0; mem_index < proc->RAM_size; mem_index++){
         if (mem_index % width == 0 && mem_index != 0)
             putchar('\n');
-        if (proc->RAM[mem_index] != 0)
+        if (proc->RAM[mem_index] == 0)
             putchar(BLACK_CHAR);
         else
             putchar(WHITE_CHAR);
     }
-    putchar('\n');
+    //printf("\033[%zuD\033[%zuA", width, proc->RAM_size / width);
     fflush(stdout);
-    printf("\033[%zuD\033[%zuA", width, proc->RAM_size / width);
 }
 

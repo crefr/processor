@@ -27,6 +27,6 @@ void processorDtor(processor_t * proc);
 
 void processorDump(processor_t * proc);
 
-const size_t DRAW_WIDTH = 10;
+const size_t DRAW_WIDTH = 96;
 
 #endif
