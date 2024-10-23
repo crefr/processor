@@ -11,10 +11,10 @@ endif
 all: asm spu
 
 asm:
-	cd assembler/ && make BUILD=$(BUILD) && cd ..
+	cd assembler/ && make BUILD=$(BUILD)
 spu:
-	cd processor/ && make BUILD=$(BUILD) && cd ..
+	cd processor/ && make BUILD=$(BUILD)
 
 clean:
-	cd assembler/ && make clean && cd ..
-	cd processor/ && make clean && cd ..
+	cd assembler/ && make clean
+	cd processor/ && make clean

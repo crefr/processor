@@ -10,8 +10,8 @@
 #include "comands.h"
 
 const size_t MAXCMDLEN = 50;
-const size_t MAXPROGLEN = 50000;
-const size_t RAM_SIZE = 96 * 36;
+// const size_t RAM_SIZE = 96 * 36;
+const size_t RAM_SIZE = 15;
 
 static int * GetPushPopArg(processor_t * proc);
 
@@ -27,7 +27,7 @@ void processorRun(processor_t * proc)
     assert(proc);
     int quit = 0;
     while (proc->ip < proc->ip + proc->prog_size && quit != 1){
-        //processorDump(proc);
+        processorDump(proc);
         switch ((*(proc->ip)) & CMDNUM_MASK){
 /**************************CRINGE_START*******************************/
             #include "def_commands.h"

@@ -51,3 +51,8 @@ void logExit()
     logPrint(0, "<-----------ENDING------------>\n");
     fclose(LOGfile);
 }
+
+void logCancelBuffer()
+{
+    setbuf(LOGfile, NULL);
+}

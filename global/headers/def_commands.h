@@ -1,31 +1,34 @@
-#define PUSH_POP_ARG    scanPushPopArgs(prog)
-#define JMP_ARG         handleLableInJmps(prog, &labels)
+#define PUSH_POP_ARG        scanPushPopArgs(prog)
+#define JMP_ARG             handleLableInJmps(prog, &labels)
 #define NO_ARGS
 
-#define PUSH(arg)       stackPush(proc->stk, arg)
-#define POP             stackPop (proc->stk)
+#define PUSH(arg)           stackPush(proc->stk, (arg))
+#define POP                 stackPop (proc->stk)
 
-#define CALL_PUSH(arg)  stackPush(proc->call_stk, arg)
-#define CALL_POP        stackPop (proc->call_stk)
+#define CALL_PUSH(arg)      stackPush(proc->call_stk, (arg))
+#define CALL_POP            stackPop (proc->call_stk)
 
-#define PUSHORPOP_ARG   *GetPushPopArg(proc)
+#define PUSHORPOP_ARG       *GetPushPopArg(proc)
 
-#define IP              proc->ip
-#define SET_IP(arg)     proc->ip = proc->prog + arg;
+#define IP                  (proc->ip)
+#define IP_REL              ((proc->ip) - (proc->prog))
+#define IP_REL_TO_ABS(arg)  (proc->prog + (arg))
+#define SET_IP(arg)         proc->ip = proc->prog + (arg)
 
-#define ARG(n)          *(proc->ip + n)
-#define DRAW            drawRAM(proc, DRAW_WIDTH)
+#define ARG(n)              *(proc->ip + (n))
+#define DRAW                drawRAM(proc, DRAW_WIDTH)
 
 #define COND_JUMP(cond)              \
     int a = POP;                     \
     int b = POP;                     \
-    if ((a) cond (b))                \
+    if (a cond b)                    \
         SET_IP(ARG(1));              \
-    IP++;
+    else                             \
+        IP += 2;
 #define MATH_TWO_ARGS(sign)          \
     int a = POP;                     \
     int b = POP;                     \
-    PUSH((a) sign (b));              \
+    PUSH(a sign b);                  \
     IP++;
 
 DEF_CMD_(HLT,  0,   NO_ARGS,
@@ -83,8 +86,8 @@ DEF_CMD_(JNE,  19,  JMP_ARG, {COND_JUMP(!=);})
 
 DEF_CMD_(CALL, 20,  JMP_ARG,
 {
+    CALL_PUSH(IP_REL + 2);
     SET_IP(ARG(1));
-    CALL_PUSH(ARG(1));
 })
 DEF_CMD_(RET,  21,  NO_ARGS,
 {

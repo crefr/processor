@@ -31,6 +31,8 @@ void logPrint(int loglevel, const char * fmt, ...);
 void logPrintTime(int loglevel);
 void logExit(void);
 
+void logCancelBuffer();
+
 
 /// @brief different levels of logging, IT IS NECESSARY TO WRITE THEM IN ASCENDING ORDER
 enum loglevels{LOG_RELEASE, LOG_DEBUG, LOG_DEBUG_PLUS};
