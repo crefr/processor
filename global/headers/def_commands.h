@@ -1,0 +1,36 @@
+#define PUSH_POP_ARG scanPushPopArgs(prog)
+#define JMP_ARG      handleLableInJmps(prog, &labels)
+#define NO_ARGS
+
+DEF_CMD_(HLT,  0,   NO_ARGS )
+
+DEF_CMD_(PUSH, 1,   PUSH_POP_ARG  )
+DEF_CMD_(POP,  2,   PUSH_POP_ARG  )
+
+DEF_CMD_(ADD,  3,   NO_ARGS )
+DEF_CMD_(SUB,  4,   NO_ARGS )
+DEF_CMD_(MUL,  5,   NO_ARGS )
+DEF_CMD_(DIV,  6,   NO_ARGS )
+
+DEF_CMD_(OUT,  7,   NO_ARGS )
+DEF_CMD_(IN,   8,   NO_ARGS )
+
+DEF_CMD_(SQRT, 9,   NO_ARGS )
+DEF_CMD_(SIN,  10,  NO_ARGS )
+DEF_CMD_(COS,  11,  NO_ARGS )
+
+DEF_CMD_(DUMP, 12,  NO_ARGS )
+
+DEF_CMD_(JMP,  13,  JMP_ARG  )
+DEF_CMD_(JA,   14,  JMP_ARG  )
+DEF_CMD_(JB,   15,  JMP_ARG  )
+DEF_CMD_(JAE,  16,  JMP_ARG  )
+DEF_CMD_(JBE,  17,  JMP_ARG  )
+DEF_CMD_(JE,   18,  JMP_ARG  )
+DEF_CMD_(JNE,  19,  JMP_ARG  )
+
+DEF_CMD_(CALL, 20,  JMP_ARG  )
+DEF_CMD_(RET,  21,  NO_ARGS )
+
+DEF_CMD_(DRAW, 22,  NO_ARGS )
+

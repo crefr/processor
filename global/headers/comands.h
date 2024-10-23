@@ -3,42 +3,14 @@
 
 #include <stdint.h>
 
+#define DEF_CMD_(cmd, num, ...)     \
+    cmd ## _CMD = num,
 enum commands
 {
-    ERROR_CMD = -1,
-
-    PUSH_CMD = 1,
-    POP_CMD,
-
-    ADD_CMD,
-    SUB_CMD,
-    MUL_CMD,
-    DIV_CMD,
-
-    OUT_CMD,
-    IN_CMD,
-
-    SQRT_CMD,
-    SIN_CMD,
-    COS_CMD,
-
-    DUMP_CMD,
-
-    JMP_CMD,
-    JA_CMD,
-    JB_CMD,
-    JAE_CMD,
-    JBE_CMD,
-    JE_CMD,
-    JNE_CMD,
-
-    CALL_CMD,
-    RET_CMD,
-
-    DRAW_CMD,
-
-    HLT_CMD = 0
+    #include "def_commands.h"
+    ERROR_CMD = -1
 };
+#undef DEF_CMD_
 
 enum registers
 {

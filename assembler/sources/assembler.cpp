@@ -31,13 +31,14 @@ typedef struct {
 const size_t MAXCMDLEN  = 50;
 
 
-static void scanPushArgs(program_t * prog, enum commands cmd_id);
+static void scanPushPopArgs(program_t * prog);
 static enum commands getCmdByStr(const char * str);
 static void handleLableInJmps(program_t * prog, label_list_t * labels);
 static void handleLabelInCode(program_t * prog, label_list_t * labels, const char * label_name);
 static void fixupLabels(program_t * prog, label_list_t * labels);
 static void labelDump(program_t * prog, label_list_t * labels);
 static void skipComment(FILE * file, const char skip_until);
+static int myStricmp(const char * first_string, const char * second_string);
 
 program_t progCtor(int * program, FILE * in_file, FILE * out_file, FILE * out_text_file)
 {
@@ -54,61 +55,35 @@ program_t progCtor(int * program, FILE * in_file, FILE * out_file, FILE * out_te
     return prog;
 }
 
+
+#define DEF_CMD_(cmd_name, num, handle_arg, ...)        \
+    if (myStricmp(#cmd_name, cmd_buf) == 0){            \
+        *(prog->ip) = num;                              \
+        handle_arg;                                     \
+        prog->ip++;                                     \
+    }                                                   \
+    else
 size_t assembleRun(program_t * prog)
 {
     assert(prog);
     label_list_t labels = {};
-    char cmd[MAXCMDLEN] = "";
-    while (fscanf(prog->in_file, "%s", cmd) > 0){
-        if (strchr(cmd, COMMENT_CHAR) != NULL){
+    char cmd_buf[MAXCMDLEN] = "";
+    while (fscanf(prog->in_file, "%s", cmd_buf) > 0){
+        if (strchr(cmd_buf, COMMENT_CHAR) != NULL){
             skipComment(prog->in_file, '\n');
             continue;
         }
-        if (strchr(cmd, ':') != NULL){
-            handleLabelInCode(prog, &labels, cmd);
+        if (strchr(cmd_buf, ':') != NULL){
+            handleLabelInCode(prog, &labels, cmd_buf);
             continue;
         }
-        enum commands cmd_id = getCmdByStr(cmd);
-        switch(cmd_id){
-            case PUSH_CMD:{
-                scanPushArgs(prog, cmd_id);
-                prog->ip++;
-                break;
-            }
-            case POP_CMD:{
-                scanPushArgs(prog, cmd_id);
-                prog->ip++;
-                break;
-            }
-            case JMP_CMD: case JA_CMD: case JB_CMD: case JAE_CMD: case JBE_CMD:
-            case CALL_CMD: {
-                *(prog->ip++) = cmd_id;
-                handleLableInJmps(prog, &labels);
-                break;
-            }
-            case ADD_CMD: case SUB_CMD: case MUL_CMD: case DIV_CMD:{
-                *(prog->ip++) = (int) cmd_id;
-                break;
-            }
-            case RET_CMD:{
-                *(prog->ip++) = (int) cmd_id;
-                break;
-            }
-            case OUT_CMD: case IN_CMD:{
-                *(prog->ip++) = (int) cmd_id;
-                break;
-            }
-            case DRAW_CMD:
-                *(prog->ip++) = (int) cmd_id;
-                break;
-            case HLT_CMD:
-                *(prog->ip++) = (int) cmd_id;
-                break;
-            default:
-                PRINTFANDLOG(LOG_RELEASE, "SYNTAX ERROR: \"%s\" in command %zu, (scanned as %d)\n",
-                            cmd, (size_t)(prog->ip - prog->program), cmd_id);
+
+        #include "def_commands.h"
+        /*else*/{
+                PRINTFANDLOG(LOG_RELEASE, "SYNTAX ERROR: \"%s\" in command %zu\n",
+                            cmd_buf, (size_t)(prog->ip - prog->program));
                 return 0;
-        }
+            }
     }
     labelDump(prog, &labels);
     fixupLabels(prog, &labels);
@@ -116,6 +91,7 @@ size_t assembleRun(program_t * prog)
     prog->size = (size_t)(prog->ip - prog->program);
     return prog->size;
 }
+#undef DEF_CMD_
 
 static void skipComment(FILE * file, const char skip_until)
 {
@@ -126,14 +102,14 @@ static enum commands getCmdByStr(const char * str)
 {
     assert(str);
     for (size_t cmd_index = 0; cmd_index < Cmd_Num; cmd_index++){
-        if (strcmp(str, Commands[cmd_index].name) == 0)
+        if (myStricmp(str, Commands[cmd_index].name) == 0)
             return Commands[cmd_index].id;
     }
     return ERROR_CMD;
 }
 
 static void scanArgStrFromFile(FILE * stream, char * str);
-static void scanPushArgs(program_t * prog, enum commands cmd_id)
+static void scanPushPopArgs(program_t * prog)
 {
     assert(prog);
     int digit_arg = 0;
@@ -143,7 +119,7 @@ static void scanPushArgs(program_t * prog, enum commands cmd_id)
     char scanned_str[MAX_STR_LEN + 1] = "";
     char str[MAX_STR_LEN + 1] = "";
     char reg_str[ARGMAXLEN + 1] = "";
-    int cmd_code = cmd_id;
+    int cmd_code = *(prog->ip);
 
     scanArgStrFromFile(prog->in_file, scanned_str);
 
@@ -218,13 +194,14 @@ static void handleLableInJmps(program_t * prog, label_list_t * labels)
     char label_str[ARGMAXLEN] = "";
     fscanf(prog->in_file, " %s ", label_str);
 
+    prog->ip++;
     if (strchr(label_str, ':') != NULL){
         logPrint(LOG_DEBUG, "found lable in jmp: %s\n", label_str);
         label_t * label = NULL;
         if ((label = findLabelInList(labels, label_str)) != NULL){
             logPrint(LOG_DEBUG, "\tfound lable %s in list\n", label_str);
             *prog->ip = (int) (label->ip - prog->program);
-            prog->ip++;
+            prog->ip;
         }
         else {
             logPrint(LOG_DEBUG, "\tdid not find lable %s in list, making new (top = %zu)\n", label_str, labels->top);
@@ -237,7 +214,7 @@ static void handleLableInJmps(program_t * prog, label_list_t * labels)
 
             labels->fixup_top++;
             labels->top++;
-            prog->ip++;
+            prog->ip;
 
         }
     }
@@ -333,4 +310,14 @@ static void scanArgStrFromFile(FILE * stream, char * str)
     }
     if (c == COMMENT_CHAR)
         skipComment(stream, '\n');
+}
+
+static int myStricmp(const char * first_string, const char * second_string)
+{
+    int res = 0;
+    while ((res = toupper(*first_string) - toupper(*second_string)) == 0 && *first_string != '\0'){
+         first_string++;
+        second_string++;
+    }
+    return res;
 }

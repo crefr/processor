@@ -10,3 +10,4 @@ spu.exe
 asmlog.txt
 spulog.txt
 bad_apple/
+preproc_out.cpp
