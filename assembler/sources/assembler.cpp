@@ -77,13 +77,14 @@ size_t assembleRun(program_t * prog)
             handleLabelInCode(prog, &labels, cmd_buf);
             continue;
         }
-
+/**************************CRINGE_START*******************************/
         #include "def_commands.h"
         /*else*/{
                 PRINTFANDLOG(LOG_RELEASE, "SYNTAX ERROR: \"%s\" in command %zu\n",
                             cmd_buf, (size_t)(prog->ip - prog->program));
                 return 0;
             }
+/**************************CRINGE_END**********************************/
     }
     labelDump(prog, &labels);
     fixupLabels(prog, &labels);

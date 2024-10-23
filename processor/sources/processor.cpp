@@ -19,6 +19,11 @@ static int * GetPushPopArg(processor_t * proc);
 
 static void drawRAM(processor_t * proc, size_t width);
 
+
+#define DEF_CMD_(cmd_name, num, arg, ...)   \
+    case cmd_name ## _CMD:                  \
+    __VA_ARGS__;                            \
+    break;
 void processorRun(processor_t * proc)
 {
     assert(proc);
@@ -26,59 +31,7 @@ void processorRun(processor_t * proc)
     while (proc->ip < proc->ip + proc->prog_size && quit != 1){
         //processorDump(proc);
         switch ((*(proc->ip)) & CMDNUM_MASK){
-            case PUSH_CMD:{
-                stackPush(proc->stk, *GetPushPopArg(proc));
-                break;
-            }
-            case POP_CMD:{
-                *GetPushPopArg(proc) = stackPop(proc->stk);
-                break;
-            }
-            case ADD_CMD: case SUB_CMD: case MUL_CMD: case DIV_CMD:{
-                calcTwoArgs(proc);
-                proc->ip++;
-                break;
-            }
-            case JMP_CMD:{
-                proc->ip = proc->prog + *(proc->ip + 1);
-                break;
-            }
-            case JA_CMD: case JB_CMD: case JAE_CMD: case JBE_CMD:{
-                condJump(proc);
-                break;
-            }
-            case CALL_CMD:{
-                stackPush(proc->call_stk, (int)(proc->ip + 2 - proc->prog));
-                proc->ip = proc->prog + *(proc->ip + 1);
-                break;
-            }
-            case RET_CMD:{
-                proc->ip = proc->prog + stackPop(proc->call_stk);
-                break;
-            }
-            case OUT_CMD:{
-                int out_elem = stackPop(proc->stk);
-                printf("%d\n", out_elem);
-                proc->ip++;
-                break;
-            }
-            case IN_CMD:{
-                int in_elem = 0;
-                scanf("%d", &in_elem);
-                stackPush(proc->stk, in_elem);
-                proc->ip++;
-                break;
-            }
-            case DRAW_CMD:{
-                drawRAM(proc, DRAW_WIDTH);
-                proc->ip++;
-                break;
-            }
-            case HLT_CMD:{
-                quit = 1;
-                proc->ip++;
-                break;
-            }
+            #include "def_commands.h"
             default:
                 quit = 1;
                 PRINTFANDLOG(LOG_RELEASE, "invalid instruction: %02X ", (unsigned int) *(proc->ip));
@@ -86,6 +39,8 @@ void processorRun(processor_t * proc)
         }
     }
 }
+#undef DEF_CMD_
+
 static void calcTwoArgs(processor_t * proc)
 {
     assert(proc);
@@ -204,19 +159,19 @@ static int * GetPushPopArg(processor_t * proc)
         if (reg)
             result += proc->reg[*(proc->ip++)];
         if (imm)
-            result += *(proc->ip++);
+            result += *(proc->ip);
         return result;
     }
     if (imm){
         proc->reg[0] = 0;
         if (reg)
             proc->reg[0] += proc->reg[*(proc->ip++)];
-        proc->reg[0] += *(proc->ip++);
+        proc->reg[0] += *(proc->ip);
         result = proc->reg + 0;
         return result;
     }
     if (reg){
-        result = proc->reg + *(proc->ip++);
+        result = proc->reg + *(proc->ip);
     }
     return result;
 }
