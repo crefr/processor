@@ -13,8 +13,6 @@ const size_t MAXCMDLEN = 50;
 const size_t MAXPROGLEN = 50000;
 const size_t RAM_SIZE = 96 * 36;
 
-static void calcTwoArgs(processor_t * proc);
-static void condJump(processor_t * proc);
 static int * GetPushPopArg(processor_t * proc);
 
 static void drawRAM(processor_t * proc, size_t width);
@@ -31,46 +29,17 @@ void processorRun(processor_t * proc)
     while (proc->ip < proc->ip + proc->prog_size && quit != 1){
         //processorDump(proc);
         switch ((*(proc->ip)) & CMDNUM_MASK){
+/**************************CRINGE_START*******************************/
             #include "def_commands.h"
             default:
                 quit = 1;
                 PRINTFANDLOG(LOG_RELEASE, "invalid instruction: %02X ", (unsigned int) *(proc->ip));
                 break;
+/**************************CRINGE_END*********************************/
         }
     }
 }
 #undef DEF_CMD_
-
-static void calcTwoArgs(processor_t * proc)
-{
-    assert(proc);
-    int a = stackPop(proc->stk);
-    int b = stackPop(proc->stk);
-    int ans = 0;
-    switch((*(proc->ip)) & CMDNUM_MASK){
-        case ADD_CMD:{
-            ans = a + b;
-            break;
-        }
-        case SUB_CMD:{
-            ans = b - a;
-            break;
-        }
-        case MUL_CMD:{
-            ans = a * b;
-            break;
-        }
-        case DIV_CMD:{
-            ans = b / a;
-            break;
-        }
-        default:
-            PRINTFANDLOG(LOG_RELEASE, "calcTwoArgs: wrong command\n");
-            break;
-    }
-    stackPush(proc->stk, ans);
-}
-
 
 static proc_status_t processorGetProgFromCode(processor_t * proc, FILE * prog_file);
 proc_status_t processorCtor(processor_t * proc, FILE * prog_file)
@@ -174,33 +143,6 @@ static int * GetPushPopArg(processor_t * proc)
         result = proc->reg + *(proc->ip);
     }
     return result;
-}
-
-static void condJump(processor_t * proc)
-{
-    assert(proc);
-    int a = stackPop(proc->stk);
-    int b = stackPop(proc->stk);
-    bool condition = false;
-
-    int op_code = *(proc->ip) & CMDNUM_MASK;
-    switch(op_code){
-        case JA_CMD:  condition = a >  b; break;
-        case JB_CMD:  condition = a <  b; break;
-        case JAE_CMD: condition = a >= b; break;
-        case JBE_CMD: condition = a <= b; break;
-        case JE_CMD:  condition = a == b; break;
-        case JNE_CMD: condition = a != b; break;
-        default:
-            logPrint(LOG_DEBUG, "invalid cmd for condJump: %d\n", op_code);
-            break;
-    }
-    if (condition){
-        proc->ip = proc->prog + *(proc->ip + 1);
-        return;
-    }
-    else
-        proc->ip += 2;
 }
 
 void processorDump(processor_t * proc)

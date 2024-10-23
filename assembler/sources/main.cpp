@@ -19,7 +19,8 @@ int main(int argc, char ** argv)
     program_t prog = progCtor(program, in_file, code_file, code_text_file);
 
     size_t prog_len = assembleRun(&prog);
-    progToText(&prog);
+    printf("program length in tokens: %zu\n", prog_len);
+    //progToText(&prog);
     progToCode(&prog);
     logExit();
     free(program);

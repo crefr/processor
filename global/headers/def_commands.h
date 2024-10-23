@@ -19,13 +19,13 @@
 #define COND_JUMP(cond)              \
     int a = POP;                     \
     int b = POP;                     \
-    if ((a) cond (b))              \
+    if ((a) cond (b))                \
         SET_IP(ARG(1));              \
     IP++;
 #define MATH_TWO_ARGS(sign)          \
     int a = POP;                     \
     int b = POP;                     \
-    PUSH((a) sign (b));            \
+    PUSH((a) sign (b));              \
     IP++;
 
 DEF_CMD_(HLT,  0,   NO_ARGS,

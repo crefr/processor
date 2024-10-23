@@ -84,7 +84,7 @@ size_t assembleRun(program_t * prog)
                             cmd_buf, (size_t)(prog->ip - prog->program));
                 return 0;
             }
-/**************************CRINGE_END**********************************/
+/**************************CRINGE_END*********************************/
     }
     labelDump(prog, &labels);
     fixupLabels(prog, &labels);
@@ -116,7 +116,7 @@ static void scanPushPopArgs(program_t * prog)
     int digit_arg = 0;
     int reg_arg   = 0;
 
-    const size_t MAX_STR_LEN = 10000;
+    const size_t MAX_STR_LEN = 511;
     char scanned_str[MAX_STR_LEN + 1] = "";
     char str[MAX_STR_LEN + 1] = "";
     char reg_str[ARGMAXLEN + 1] = "";
@@ -124,8 +124,7 @@ static void scanPushPopArgs(program_t * prog)
 
     scanArgStrFromFile(prog->in_file, scanned_str);
 
-    int amogus = 0;
-    if ((amogus = sscanf(scanned_str, " [%[^]] ", str)) > 0) {;
+    if (sscanf(scanned_str, " [%[^]] ", str) > 0) {;
         cmd_code |= MEM_MASK;
         strcpy(scanned_str, str);
     }
@@ -202,7 +201,6 @@ static void handleLableInJmps(program_t * prog, label_list_t * labels)
         if ((label = findLabelInList(labels, label_str)) != NULL){
             logPrint(LOG_DEBUG, "\tfound lable %s in list\n", label_str);
             *prog->ip = (int) (label->ip - prog->program);
-            prog->ip;
         }
         else {
             logPrint(LOG_DEBUG, "\tdid not find lable %s in list, making new (top = %zu)\n", label_str, labels->top);
@@ -215,7 +213,6 @@ static void handleLableInJmps(program_t * prog, label_list_t * labels)
 
             labels->fixup_top++;
             labels->top++;
-            prog->ip;
 
         }
     }
@@ -300,12 +297,12 @@ static void labelDump(program_t * prog, label_list_t * labels)
 
 static void scanArgStrFromFile(FILE * stream, char * str)
 {
-    char c = '\0';
+    int c = '\0';
     while (isspace(c = fgetc(stream)));
 
     size_t index = 0;
     while (c != '\n' && c != COMMENT_CHAR){
-        str[index] = c;
+        str[index] = (char)c;
         index++;
         c = fgetc(stream);
     }
