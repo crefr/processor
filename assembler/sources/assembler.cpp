@@ -19,8 +19,14 @@ typedef struct {
     size_t label_id;
 } fixup_label_t;
 
-const size_t MAX_LABELS_NUM = 100;
-const size_t MAX_FIXUPS_NUM = 100;
+const size_t MAX_LABELS_NUM  = 100;
+const size_t MAX_FIXUPS_NUM  = 100;
+
+const size_t START_PROG_LEN  = 256;
+const size_t SIZE_MULTIPLIER = 2;
+
+const size_t MAX_CMD_LEN = 100;
+
 typedef struct {
     label_t labels[MAX_LABELS_NUM];
     fixup_label_t fixups[MAX_FIXUPS_NUM];
@@ -30,7 +36,6 @@ typedef struct {
 
 const size_t MAXCMDLEN  = 50;
 
-
 static void scanPushPopArgs(program_t * prog);
 static enum commands getCmdByStr(const char * str);
 static void handleLableInJmps(program_t * prog, label_list_t * labels);
@@ -39,22 +44,28 @@ static void fixupLabels(program_t * prog, label_list_t * labels);
 static void labelDump(program_t * prog, label_list_t * labels);
 static void skipComment(FILE * file, const char skip_until);
 static int myStricmp(const char * first_string, const char * second_string);
+static void progResizeIfNeed(program_t * prog);
 
-program_t progCtor(int * program, FILE * in_file, FILE * out_file, FILE * out_text_file)
+program_t progCtor(FILE * in_file, FILE * out_file, FILE * out_text_file)
 {
-    assert(program);
     assert(in_file);
     assert(out_file);
     assert(out_text_file);
     program_t prog = {};
-    prog.program = program;
-    prog.ip = program;
+    prog.program = (int *)calloc(START_PROG_LEN, sizeof(int));
+    prog.size = START_PROG_LEN;
+    prog.ip = prog.program;
     prog.in_file  = in_file;
     prog.out_file = out_file;
     prog.out_text_file = out_text_file;
     return prog;
 }
 
+void progDtor(program_t * prog)
+{
+    free(prog->program);
+    prog->program = NULL;
+}
 
 #define DEF_CMD_(cmd_name, num, handle_arg, ...)        \
     if (myStricmp(#cmd_name, cmd_buf) == 0){            \
@@ -69,6 +80,7 @@ size_t assembleRun(program_t * prog)
     label_list_t labels = {};
     char cmd_buf[MAXCMDLEN] = "";
     while (fscanf(prog->in_file, "%s", cmd_buf) > 0){
+        progResizeIfNeed(prog);
         if (strchr(cmd_buf, COMMENT_CHAR) != NULL){
             skipComment(prog->in_file, '\n');
             continue;
@@ -96,6 +108,7 @@ size_t assembleRun(program_t * prog)
 
 static void skipComment(FILE * file, const char skip_until)
 {
+    assert(file);
     while(fgetc(file) != skip_until);
 }
 
@@ -113,7 +126,6 @@ static void scanArgStrFromFile(FILE * stream, char * str);
 static void scanPushPopArgs(program_t * prog)
 {
     assert(prog);
-    //int imm_arg = 0;
     int reg_arg   = 0;
 
     const size_t MAX_STR_LEN = 511;
@@ -128,7 +140,6 @@ static void scanPushPopArgs(program_t * prog)
         cmd_code |= MEM_MASK;
         strcpy(scanned_str, str);
     }
-
     int scanned_chs = 0;
     float fl_imm_arg = 0;
     if (sscanf(scanned_str, "%g%n", &fl_imm_arg, &scanned_chs) > 0){
@@ -152,7 +163,6 @@ static void scanPushPopArgs(program_t * prog)
         }
     }
 }
-
 
 /***********************************
 HEADER FORMAT (byte representation)
@@ -214,7 +224,6 @@ static void handleLableInJmps(program_t * prog, label_list_t * labels)
 
             labels->fixup_top++;
             labels->top++;
-
         }
     }
     else {
@@ -275,6 +284,8 @@ static void fixupLabels(program_t * prog, label_list_t * labels)
 
 static void labelDump(program_t * prog, label_list_t * labels)
 {
+    assert(prog);
+    assert(labels);
     logPrint(LOG_DEBUG, "\n-----LABELS_DUMP-----\n");
     logPrint(LOG_DEBUG, "num of labels: %zu\n", labels->top);
     logPrint(LOG_DEBUG, "labels:\n");
@@ -298,6 +309,8 @@ static void labelDump(program_t * prog, label_list_t * labels)
 
 static void scanArgStrFromFile(FILE * stream, char * str)
 {
+    assert(stream);
+    assert(str);
     int c = '\0';
     while (isspace(c = fgetc(stream)));
 
@@ -313,10 +326,23 @@ static void scanArgStrFromFile(FILE * stream, char * str)
 
 static int myStricmp(const char * first_string, const char * second_string)
 {
+    assert(first_string);
+    assert(second_string);
     int res = 0;
     while ((res = toupper(*first_string) - toupper(*second_string)) == 0 && *first_string != '\0'){
          first_string++;
         second_string++;
     }
     return res;
+}
+
+static void progResizeIfNeed(program_t * prog)
+{
+    assert(prog);
+    size_t ip_index = (size_t)(prog->ip - prog->program);
+    if (prog->size - ip_index < MAX_CMD_LEN){
+        prog->size *= SIZE_MULTIPLIER;
+        prog->program = (int *)realloc(prog->program, prog->size * sizeof(int));
+        prog->ip = prog->program + ip_index;
+    }
 }

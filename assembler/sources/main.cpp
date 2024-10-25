@@ -6,7 +6,6 @@
 #include "assembler.h"
 #include "logger.h"
 
-const size_t MAXPROGLEN = 400000000;
 const size_t MAX_FILE_NAME = 100;
 const char * OUT_FILE_EXT = "bin";
 const char * OUT_FILE_TEXT_EXT = "txt";
@@ -29,15 +28,14 @@ int main(int argc, char ** argv)
     FILE * code_text_file = fopen(code_text_file_name, "w");
     FILE * code_file = fopen(code_file_name, "wb");
 
-    int *program = (int *)calloc(MAXPROGLEN, sizeof(int));
-    program_t prog = progCtor(program, in_file, code_file, code_text_file);
+    program_t prog = progCtor(in_file, code_file, code_text_file);
 
     size_t prog_len = assembleRun(&prog);
     printf("program length in tokens: %zu\n", prog_len);
     progToText(&prog);
     progToCode(&prog);
+    progDtor(&prog);
     logExit();
-    free(program);
     fclose(in_file);
     fclose(code_text_file);
     fclose(code_file);

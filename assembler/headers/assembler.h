@@ -12,9 +12,10 @@ typedef struct {
 
 const char COMMENT_CHAR = ';';
 
-program_t progCtor(int * program, FILE * in_file, FILE * out_file, FILE * out_text_file);
+program_t progCtor(FILE * in_file, FILE * out_file, FILE * out_text_file);
 void progToCode(program_t * prog);
 void progToText(program_t * prog);
 size_t assembleRun(program_t * prog);
+void progDtor(program_t * prog);
 
 #endif
