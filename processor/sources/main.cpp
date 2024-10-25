@@ -4,16 +4,20 @@
 #include "processor.h"
 #include "logger.h"
 
-int main()
+int main(int argc, const char ** argv)
 {
     logStart("spulog.txt", LOG_RELEASE);
     //logCancelBuffer();
 
-    FILE * prog_file = fopen("program_code.txt", "r");
+    FILE * prog_file = fopen((argc > 1) ? argv[1] : "program_code.bin", "rb");
+    if (prog_file == NULL){
+        fprintf(stderr, "Program file can`t be opened\n");
+        return 1;
+    }
 
     processor_t proc = {};
-
     if (processorCtor(&proc, prog_file) != PROC_SUCCESS){
+        fprintf(stderr, "Processor can`t be constructed\n");
         processorDtor(&proc);
         return 1;
     }

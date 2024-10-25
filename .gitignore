@@ -12,3 +12,8 @@ spulog.txt
 bad_apple/
 preproc_out.cpp
 program.asm
+asm_progs/fibonacci_recursive.bin
+asm_progs/fibonacci_recursive.txt
+asm_progs/quadratka.bin
+asm_progs/quadratka.txt
+program_code.bin

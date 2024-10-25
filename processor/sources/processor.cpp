@@ -10,8 +10,7 @@
 #include "comands.h"
 
 const size_t MAXCMDLEN = 50;
-// const size_t RAM_SIZE = 96 * 36;
-const size_t RAM_SIZE = 4096;
+const size_t RAM_SIZE = 96 * 36;
 
 static int * GetPushPopArg(processor_t * proc);
 
@@ -108,7 +107,11 @@ void processorDtor(processor_t * proc)
     stackDtor(proc->stk);
     free(proc->stk);
 
+    free(proc->RAM);
+    proc->RAM = NULL;
+
     proc->stk = NULL;
+    proc->call_stk = NULL;
 }
 
 static int * GetPushPopArg(processor_t * proc)
@@ -148,34 +151,36 @@ static int * GetPushPopArg(processor_t * proc)
 void processorDump(processor_t * proc)
 {
     assert(proc);
-    logPrint(LOG_DEBUG, "\n-------------PROCESSOR_DUMP-------------\n");
-    logPrint(LOG_DEBUG, "processor at %p\n", proc);
-    logPrint(LOG_DEBUG, "prog [%p]:\n", proc->prog);
-    logPrint(LOG_DEBUG, "\t");
-    for (size_t cmd_index = 0; cmd_index < proc->prog_size; cmd_index++)
-        logPrint(LOG_DEBUG, "%4zu ", cmd_index);
-    logPrint(LOG_DEBUG, "\n");
-    logPrint(LOG_DEBUG, "\t");
-    for (size_t cmd_index = 0; cmd_index < proc->prog_size; cmd_index++)
-        logPrint(LOG_DEBUG, "%4d ", proc->prog[cmd_index]);
-    logPrint(LOG_DEBUG, "\n\t");
-    for (size_t cmd_skip = 0; cmd_skip < (size_t)((proc->ip) - (proc->prog)); cmd_skip++)
-        logPrint(LOG_DEBUG, "     ");
-    logPrint(LOG_DEBUG, "   ^ ip = %zu\n", proc->ip - proc->prog);
+    if (logGetLevel() >= LOG_DEBUG){
+        logPrint(LOG_DEBUG, "\n-------------PROCESSOR_DUMP-------------\n");
+        logPrint(LOG_DEBUG, "processor at %p\n", proc);
+        logPrint(LOG_DEBUG, "prog [%p]:\n", proc->prog);
+        logPrint(LOG_DEBUG, "\t");
+        for (size_t cmd_index = 0; cmd_index < proc->prog_size; cmd_index++)
+            logPrint(LOG_DEBUG, "%4zu ", cmd_index);
+        logPrint(LOG_DEBUG, "\n");
+        logPrint(LOG_DEBUG, "\t");
+        for (size_t cmd_index = 0; cmd_index < proc->prog_size; cmd_index++)
+            logPrint(LOG_DEBUG, "%4d ", proc->prog[cmd_index]);
+        logPrint(LOG_DEBUG, "\n\t");
+        for (size_t cmd_skip = 0; cmd_skip < (size_t)((proc->ip) - (proc->prog)); cmd_skip++)
+            logPrint(LOG_DEBUG, "     ");
+        logPrint(LOG_DEBUG, "   ^ ip = %zu\n", proc->ip - proc->prog);
 
-    logPrint(LOG_DEBUG, "call stack: \n");
-    for (size_t index = 0; index < proc->call_stk->size; index++)
-        logPrint(LOG_DEBUG, "\t%zu: %04d\n", index, proc->call_stk->data[index]);
+        logPrint(LOG_DEBUG, "call stack: \n");
+        for (size_t index = 0; index < proc->call_stk->size; index++)
+            logPrint(LOG_DEBUG, "\t%zu: %04d\n", index, proc->call_stk->data[index]);
 
-    logPrint(LOG_DEBUG, "RAM: \n");
-    for (size_t index = 0; index < RAM_SIZE; index++)
-        logPrint(LOG_DEBUG, "\t%04zu: %04d\n", index, proc->RAM[index]);
+        logPrint(LOG_DEBUG, "RAM: \n");
+        for (size_t index = 0; index < RAM_SIZE; index++)
+            logPrint(LOG_DEBUG, "\t%04zu: %04d\n", index, proc->RAM[index]);
 
-    logPrint(LOG_DEBUG, "registers: \n");
-    for (size_t reg_index = 0; reg_index < REGNUM; reg_index++){
-        logPrint(LOG_DEBUG, "\treg 0x%02X: %d\n", reg_index, proc->reg[reg_index]);
+        logPrint(LOG_DEBUG, "registers: \n");
+        for (size_t reg_index = 0; reg_index < REGNUM; reg_index++){
+            logPrint(LOG_DEBUG, "\treg 0x%02X: %d\n", reg_index, proc->reg[reg_index]);
+        }
+        logPrint(LOG_DEBUG, "-----------PROCESSOR_DUMP_END-----------\n\n");
     }
-    logPrint(LOG_DEBUG, "-----------PROCESSOR_DUMP_END-----------\n\n");
 }
 
 const char WHITE_CHAR = '*';
@@ -184,6 +189,7 @@ const char BLACK_CHAR = '.';
 const char * RET_STRING = "\033[3J\r";
 static void drawRAM(processor_t * proc, size_t width)
 {
+    logPrint(LOG_DEBUG_PLUS, "drawing...\n");
     fputs(RET_STRING, stdout);
     for (size_t mem_index = 0; mem_index < proc->RAM_size; mem_index++){
         if (mem_index % width == 0 && mem_index != 0)

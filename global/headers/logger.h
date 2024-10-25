@@ -1,6 +1,9 @@
 #ifndef LOGGER_INCLUDED
 #define LOGGER_INCLUDED
 
+/// @brief different levels of logging, IT IS NECESSARY TO WRITE THEM IN ASCENDING ORDER
+enum loglevels{LOG_RELEASE, LOG_DEBUG, LOG_DEBUG_PLUS};
+
 #define LOGPRINTWITHTIME(loglevel, ...)          \
         do{                                      \
                 logPrintTime(loglevel);          \
@@ -26,15 +29,13 @@
                 printf("\n");                    \
         }while(0)
 
-int  logStart(const char * logfile, int loglevel);
-void logPrint(int loglevel, const char * fmt, ...);
-void logPrintTime(int loglevel);
+int  logStart(const char * logfile, enum loglevels loglevel);
+void logPrint(enum loglevels loglevel, const char * fmt, ...);
+void logPrintTime(enum loglevels loglevel);
 void logExit(void);
 
 void logCancelBuffer();
+enum loglevels logGetLevel();
 
-
-/// @brief different levels of logging, IT IS NECESSARY TO WRITE THEM IN ASCENDING ORDER
-enum loglevels{LOG_RELEASE, LOG_DEBUG, LOG_DEBUG_PLUS};
 
 #endif

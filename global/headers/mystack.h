@@ -9,16 +9,16 @@
 #define STACK_HASH_ON
 
 #ifdef STACK_DEBUG
-    #define STACKASSERT(stkptr, expr)                                                                             \
-        do{                                                                                                       \
-            if (!(expr)){                                                                                         \
-                LOGPRINTWITHTIME(0, "---\\/\n<<<<<<<<STACK ERROR>>>>>>>>");                                       \
-                PRINTFANDLOG(0, "Assertion failed:\n\t{" #expr "}\n\tFILE %s, in FUNCTION \"%s\", LINE %d",       \
-                            __FILE__, __PRETTY_FUNCTION__, __LINE__);                                             \
-                stackDump(stkptr);                                                                                \
-                logExit();                                                                                        \
-                exit(1);                                                                                          \
-            }                                                                                                     \
+    #define STACKASSERT(stkptr, expr)                                                                                       \
+        do{                                                                                                                 \
+            if (!(expr)){                                                                                                   \
+                LOGPRINTWITHTIME(LOG_RELEASE, "---\\/\n<<<<<<<<STACK ERROR>>>>>>>>");                                       \
+                PRINTFANDLOG(LOG_RELEASE, "Assertion failed:\n\t{" #expr "}\n\tFILE %s, in FUNCTION \"%s\", LINE %d",       \
+                        __FILE__, __PRETTY_FUNCTION__, __LINE__);                                                           \
+                stackDump(stkptr);                                                                                          \
+                logExit();                                                                                                  \
+                exit(1);                                                                                                    \
+        }                                                                                                                   \
         }while(0)
 #else
     #define STACKASSERT(stkptr, expr)

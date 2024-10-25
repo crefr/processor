@@ -6,12 +6,12 @@ static const int MAXLIN = 100;
 enum exits {ARGGOOD, ARGBAD, ARGEXIT};
 
 //! @brief Структура, хранящая данные о флаге командной строки
-struct argvEx_t
+typedef struct argvEx_t
 {
     unsigned int valtype;       ///< Номер типа значения
     const char *fname;          ///< Название флага
     const char *help;           ///< То, что выведется в --help про этот флаг
-};
+} argvEx_t;
 
 //! @brief Объединение, хранящее значение флага
 typedef union fvals

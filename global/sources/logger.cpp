@@ -5,10 +5,10 @@
 
 #include "logger.h"
 
-static int LOGlevel = 0;
+static enum loglevels LOGlevel = LOG_RELEASE;
 static FILE * LOGfile = NULL;
 
-int logStart(const char * logfilename, int loglevel)
+int logStart(const char * logfilename, enum loglevels loglevel)
 {
     LOGlevel = loglevel;
     LOGfile = fopen(logfilename, "a+");
@@ -16,11 +16,11 @@ int logStart(const char * logfilename, int loglevel)
         printf(">>> logger ERROR: cannot open logfile\n");
         return 0;
     }
-    logPrint(0, "\n<-----------STARTED----------->\n");
+    logPrint(LOG_RELEASE, "\n<-----------STARTED----------->\n");
     return 1;
 }
 
-void logPrint(int loglevel, const char * fmt, ...)
+void logPrint(enum loglevels loglevel, const char * fmt, ...)
 {
     if (loglevel <= LOGlevel){
         //logPrintTime();
@@ -32,7 +32,7 @@ void logPrint(int loglevel, const char * fmt, ...)
     }
 }
 
-void logPrintTime(int loglevel)
+void logPrintTime(enum loglevels loglevel)
 {
     if (loglevel <= LOGlevel){
         time_t time_0= time(NULL);
@@ -48,11 +48,16 @@ void logPrintTime(int loglevel)
 
 void logExit()
 {
-    logPrint(0, "<-----------ENDING------------>\n");
+    logPrint(LOG_RELEASE, "<-----------ENDING------------>\n");
     fclose(LOGfile);
 }
 
 void logCancelBuffer()
 {
     setbuf(LOGfile, NULL);
+}
+
+enum loglevels logGetLevel()
+{
+    return LOGlevel;
 }

@@ -1,19 +1,6 @@
 push    5
-pop     rax
+pop     [0]
+PUSH    5
+POP     [52]
 
-push    rax
-push    5
-
-JE      TEST:
-push    52
-out
-
-
-hlt
-
-
-
-TEST:
-push    1
-out
-hlt
+HLT
