@@ -20,7 +20,7 @@ int main(int argc, char ** argv)
 
     size_t prog_len = assembleRun(&prog);
     printf("program length in tokens: %zu\n", prog_len);
-    //progToText(&prog);
+    progToText(&prog);
     progToCode(&prog);
     logExit();
     free(program);

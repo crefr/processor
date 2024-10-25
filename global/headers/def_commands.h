@@ -2,6 +2,10 @@
 #define JMP_ARG             handleLableInJmps(prog, &labels)
 #define NO_ARGS
 
+#define TO_FLOAT(arg)       (((float)(arg)) / ACC_COEF)
+#define TO_INT(arg)         ((int)((arg) * ACC_COEF))
+
+
 #define PUSH(arg)           stackPush(proc->stk, (arg))
 #define POP                 stackPop (proc->stk)
 
@@ -21,14 +25,18 @@
 #define COND_JUMP(cond)              \
     int a = POP;                     \
     int b = POP;                     \
-    if (a cond b)                    \
+    if (b cond a)                    \
         SET_IP(ARG(1));              \
     else                             \
         IP += 2;
 #define MATH_TWO_ARGS(sign)          \
-    int a = POP;                     \
-    int b = POP;                     \
-    PUSH(a sign b);                  \
+    float a = TO_FLOAT(POP);         \
+    float b = TO_FLOAT(POP);         \
+    PUSH(TO_INT(b sign a));          \
+    IP++;
+#define MATH_ONE_ARG(func)           \
+    float arg = TO_FLOAT(POP);       \
+    PUSH(TO_INT(func(arg)));         \
     IP++;
 
 DEF_CMD_(HLT,  0,   NO_ARGS,
@@ -55,20 +63,20 @@ DEF_CMD_(DIV,  6,   NO_ARGS, {MATH_TWO_ARGS(/)})
 
 DEF_CMD_(OUT,  7,   NO_ARGS,
 {
-    printf("%d\n", POP);
+    printf("%g\n", TO_FLOAT(POP));
     IP++;
 })
 DEF_CMD_(IN,   8,   NO_ARGS,
 {
-    int a = 0;
-    scanf("%d", &a);
-    PUSH(a);
+    float a = 0;
+    scanf("%g", &a);
+    PUSH(TO_INT(a));
     IP++;
 })
 
-// DEF_CMD_(SQRT, 9,   NO_ARGS )
-// DEF_CMD_(SIN,  10,  NO_ARGS )
-// DEF_CMD_(COS,  11,  NO_ARGS )
+DEF_CMD_(SQRT, 9,   NO_ARGS, {MATH_ONE_ARG(sqrt)})
+DEF_CMD_(SIN,  10,  NO_ARGS, {MATH_ONE_ARG(sin) })
+DEF_CMD_(COS,  11,  NO_ARGS, {MATH_ONE_ARG(cos) })
 
 // DEF_CMD_(DUMP, 12,  NO_ARGS )
 

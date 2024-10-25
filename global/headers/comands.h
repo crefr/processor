@@ -58,6 +58,8 @@ const int IMM_MASK = 0x20;
 const int REG_MASK = 0x40;
 const int MEM_MASK = 0x80;
 
+const int ACC_COEF = 1000;
+
 const uint64_t SIGNATURE = * (const uint64_t *)"*crefr++";
 const uint64_t COMMAND_VERSION = 3;
 typedef struct {

@@ -11,7 +11,7 @@
 
 const size_t MAXCMDLEN = 50;
 // const size_t RAM_SIZE = 96 * 36;
-const size_t RAM_SIZE = 15;
+const size_t RAM_SIZE = 4096;
 
 static int * GetPushPopArg(processor_t * proc);
 
@@ -126,15 +126,15 @@ static int * GetPushPopArg(processor_t * proc)
     if (mem){
         result = proc->RAM;
         if (reg)
-            result += proc->reg[*(proc->ip++)];
+            result += (proc->reg[*(proc->ip++)]) / ACC_COEF;
         if (imm)
-            result += *(proc->ip);
+            result += *(proc->ip) / ACC_COEF;
         return result;
     }
     if (imm){
         proc->reg[0] = 0;
         if (reg)
-            proc->reg[0] += proc->reg[*(proc->ip++)];
+            proc->reg[0] += (proc->reg[*(proc->ip++)]);
         proc->reg[0] += *(proc->ip);
         result = proc->reg + 0;
         return result;

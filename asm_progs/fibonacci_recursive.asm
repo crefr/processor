@@ -12,7 +12,7 @@ FIBBONACCI:
     push    rbx
     push    2
 
-    jae     NUMBER_ONE:
+    jbe     NUMBER_ONE:
     push    rbx
 
     push    rbx -1

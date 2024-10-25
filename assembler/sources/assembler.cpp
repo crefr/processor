@@ -19,7 +19,7 @@ typedef struct {
     size_t label_id;
 } fixup_label_t;
 
-const size_t MAX_LABELS_NUM = 10;
+const size_t MAX_LABELS_NUM = 100;
 const size_t MAX_FIXUPS_NUM = 100;
 typedef struct {
     label_t labels[MAX_LABELS_NUM];
@@ -113,7 +113,7 @@ static void scanArgStrFromFile(FILE * stream, char * str);
 static void scanPushPopArgs(program_t * prog)
 {
     assert(prog);
-    int digit_arg = 0;
+    //int imm_arg = 0;
     int reg_arg   = 0;
 
     const size_t MAX_STR_LEN = 511;
@@ -130,20 +130,21 @@ static void scanPushPopArgs(program_t * prog)
     }
 
     int scanned_chs = 0;
-    if (sscanf(scanned_str, "%d%n", &digit_arg, &scanned_chs) > 0){
+    float fl_imm_arg = 0;
+    if (sscanf(scanned_str, "%g%n", &fl_imm_arg, &scanned_chs) > 0){
         cmd_code |= IMM_MASK;
         *(prog->ip++) = cmd_code;
-        *prog->ip     = digit_arg;
+        *prog->ip     = (int)(fl_imm_arg * ACC_COEF);
     }
     else{
         sscanf(scanned_str, " %s%n ", reg_str, &scanned_chs);
         cmd_code |= REG_MASK;
         reg_arg = toupper(reg_str[1]) - 'A' + 1;
-        if (sscanf(scanned_str + scanned_chs, "%d", &digit_arg) > 0){
+        if (sscanf(scanned_str + scanned_chs, "%g", &fl_imm_arg) > 0){
             cmd_code |= IMM_MASK;
             *(prog->ip++) = cmd_code;
             *(prog->ip++) = reg_arg;
-            *prog->ip     = digit_arg;
+            *prog->ip     = (int)(fl_imm_arg * ACC_COEF);
         }
         else{
             *(prog->ip++) = cmd_code;
