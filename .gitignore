@@ -17,3 +17,7 @@ asm_progs/fibonacci_recursive.txt
 asm_progs/quadratka.bin
 asm_progs/quadratka.txt
 program_code.bin
+asm_progs/ball.txt
+asm_progs/ball.bin
+asm_progs/squares.bin
+asm_progs/squares.txt

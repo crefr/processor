@@ -14,7 +14,7 @@ void changeExtension(char * new_name, const char * old_name, const char * ext_st
 
 int main(int argc, char ** argv)
 {
-    logStart("asmlog.txt", LOG_DEBUG_PLUS);
+    logStart("asmlog.txt", LOG_DEBUG);
     const char * input_file_name = (argc > 1) ? argv[1] : ("program.asm");
     FILE * in_file = fopen((argc > 1) ? argv[1] : ("program.asm"), "r");
     assert(in_file != NULL);

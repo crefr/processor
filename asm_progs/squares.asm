@@ -17,6 +17,6 @@ pop         rax
 push        rax
 push        rbx
 
-jb          START:
+jbe         START:
 
 hlt

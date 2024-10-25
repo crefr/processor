@@ -70,7 +70,7 @@ static void labelListDtor(label_list_t * list);
 static label_t * findLabelInList(label_list_t * labels, const char * name);
 
 /// @brief  writes header to binary file
-static void writeHeader(FILE * out_file, size_t prog_size)
+static void writeHeader(FILE * out_file, size_t prog_size);
 
 program_t progCtor(FILE * in_file, FILE * out_file, FILE * out_text_file)
 {
@@ -170,7 +170,9 @@ static void scanPushPopArgs(program_t * prog)
     int cmd_code = *(prog->ip);
 
     int scanned_chars = 0;
-    sscanf(prog->line_ptr, "%[^]] %n", scanned_str, &scanned_chars);
+    // sscanf(prog->line_ptr, "%[^] %n", scanned_str, &scanned_chars);
+    strcpy(scanned_str, prog->line_ptr);
+    scanned_chars = strlen(prog->line_ptr);
     prog->line_ptr += scanned_chars;
 
     if (sscanf(scanned_str, " [%[^]] ", str) > 0) {;

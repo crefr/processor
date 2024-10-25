@@ -15,7 +15,7 @@
 #define PUSHORPOP_ARG       *GetPushPopArg(proc)
 
 #define IP                  (proc->ip)
-#define IP_REL              ((proc->ip) - (proc->prog))
+#define IP_REL              (int)((proc->ip) - (proc->prog))
 #define IP_REL_TO_ABS(arg)  (proc->prog + (arg))
 #define SET_IP(arg)         proc->ip = proc->prog + (arg)
 
@@ -78,7 +78,14 @@ DEF_CMD_(SQRT, 9,   NO_ARGS, {MATH_ONE_ARG(sqrt)})
 DEF_CMD_(SIN,  10,  NO_ARGS, {MATH_ONE_ARG(sin) })
 DEF_CMD_(COS,  11,  NO_ARGS, {MATH_ONE_ARG(cos) })
 
-// DEF_CMD_(DUMP, 12,  NO_ARGS )
+DEF_CMD_(DUMP, 12,  PUSH_POP_ARG,
+{
+    logPrint(LOG_RELEASE, "--------DUMP #%d--------\n", ARG(1));
+    processorDump(proc);
+    logPrint(LOG_RELEASE, "--------DUMP #%d END----\n", ARG(1));
+
+    IP+=2;
+})
 
 DEF_CMD_(JMP,  13,  JMP_ARG,
 {
@@ -104,6 +111,10 @@ DEF_CMD_(RET,  21,  NO_ARGS,
 DEF_CMD_(DRAW, 22,  NO_ARGS,
 {
     DRAW;
+    IP++;
+})
+DEF_CMD_(NOCMD, 23,  NO_ARGS,
+{
     IP++;
 })
 

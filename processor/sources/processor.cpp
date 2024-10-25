@@ -34,7 +34,7 @@ void processorRun(processor_t * proc)
     assert(proc);
     int quit = 0;
     while (proc->ip < proc->ip + proc->prog_size && quit != 1){
-        processorDump(proc);
+        //processorDump(proc);
         switch ((*(proc->ip)) & CMDNUM_MASK){
 /**************************CRINGE_START*******************************/
             #include "def_commands.h"
@@ -177,9 +177,13 @@ void processorDump(processor_t * proc)
         for (size_t index = 0; index < proc->call_stk->size; index++)
             logPrint(LOG_DEBUG, "\t%zu: %04d\n", index, proc->call_stk->data[index]);
 
-        logPrint(LOG_DEBUG, "RAM: \n");
-        for (size_t index = 0; index < RAM_SIZE; index++)
-            logPrint(LOG_DEBUG, "\t%04zu: %04d\n", index, proc->RAM[index]);
+        logPrint(LOG_DEBUG, "stack: \n");
+        for (size_t index = 0; index < proc->stk->size; index++)
+            logPrint(LOG_DEBUG, "\t%zu: %04d\n", index, proc->stk->data[index]);
+
+        // logPrint(LOG_DEBUG, "RAM: \n");
+        // for (size_t index = 0; index < RAM_SIZE; index++)
+        //     logPrint(LOG_DEBUG, "\t%04zu: %04d\n", index, proc->RAM[index]);
 
         logPrint(LOG_DEBUG, "registers: \n");
         for (size_t reg_index = 0; reg_index < REGNUM; reg_index++){

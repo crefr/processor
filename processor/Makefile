@@ -32,6 +32,8 @@ CFLAGS_LINUX = -I./$(HEADDIR) -I./$(GLOBALHEADDIR) -D _DEBUG -ggdb3 -std=c++17 -
 # release
 CFLAGS_RELEASE = -I./$(HEADDIR) -I./$(GLOBALHEADDIR) -O3
 
+ALL_DEPS = $(HEADDIR)processor.h $(GLOBALHEADDIR)logger.h $(GLOBALHEADDIR)comands.h $(GLOBALHEADDIR)def_commands.h $(GLOBALHEADDIR)hash.h $(GLOBALHEADDIR)mystack.h
+
 ifeq ($(BUILD),WIN)
 	CFLAGS = $(CFLAGS_WINDOWS)
 else ifeq ($(BUILD),LINUX)
@@ -43,21 +45,21 @@ endif
 $(FILENAME): $(OBJDIR)main.o $(OBJDIR)mystack.o $(OBJDIR)logger.o $(OBJDIR)hash.o $(OBJDIR)processor.o
 	$(CC) $(CFLAGS) $^ -o $@
 
-$(OBJDIR)main.o: $(SRCDIR)main.cpp $(GLOBALHEADDIR)mystack.h $(GLOBALHEADDIR)logger.h $(HEADDIR)processor.h
+$(OBJDIR)main.o: $(SRCDIR)main.cpp $(ALL_DEPS)
 	mkdir -p $(OBJDIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(OBJDIR)mystack.o: $(GLOBALSRCDIR)mystack.cpp $(GLOBALHEADDIR)mystack.h $(GLOBALHEADDIR)logger.h
+$(OBJDIR)mystack.o: $(GLOBALSRCDIR)mystack.cpp $(ALL_DEPS)
 	mkdir -p $(OBJDIR)
 	$(CC) $(CFLAGS) -c $< -o $@
-$(OBJDIR)logger.o: $(GLOBALSRCDIR)logger.cpp $(GLOBALHEADDIR)logger.h
+$(OBJDIR)logger.o: $(GLOBALSRCDIR)logger.cpp $(ALL_DEPS)
 	mkdir -p $(OBJDIR)
 	$(CC) $(CFLAGS) -c $< -o $@
-$(OBJDIR)hash.o: $(GLOBALSRCDIR)hash.cpp $(GLOBALHEADDIR)hash.h
+$(OBJDIR)hash.o: $(GLOBALSRCDIR)hash.cpp $(ALL_DEPS)
 	mkdir -p $(OBJDIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(OBJDIR)processor.o: $(SRCDIR)processor.cpp $(HEADDIR)processor.h $(GLOBALHEADDIR)mystack.h
+$(OBJDIR)processor.o: $(SRCDIR)processor.cpp $(HEADDIR)processor.h $(ALL_DEPS)
 	mkdir -p $(OBJDIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 

@@ -32,6 +32,8 @@ CFLAGS_LINUX = -I./$(HEADDIR) -I./$(GLOBALHEADDIR) -D _DEBUG -ggdb3 -std=c++17 -
 # release
 CFLAGS_RELEASE = -I./$(HEADDIR) -I./$(GLOBALHEADDIR) -O3
 
+ALL_DEPS = $(HEADDIR)assembler.h $(GLOBALHEADDIR)logger.h $(GLOBALHEADDIR)comands.h $(GLOBALHEADDIR)def_commands.h $(GLOBALHEADDIR)hash.h $(GLOBALHEADDIR)mystack.h
+
 ifeq ($(BUILD),WIN)
 	CFLAGS = $(CFLAGS_WINDOWS)
 else ifeq ($(BUILD),LINUX)
@@ -43,14 +45,14 @@ endif
 $(FILENAME): $(OBJDIR)main.o $(OBJDIR)logger.o $(OBJDIR)assembler.o
 	$(CC) $(CFLAGS) $^ -o $@
 
-$(OBJDIR)main.o: $(SRCDIR)main.cpp $(GLOBALHEADDIR)logger.h $(HEADDIR)assembler.h
+$(OBJDIR)main.o: $(SRCDIR)main.cpp $(ALL_DEPS)
 	mkdir -p $(OBJDIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(OBJDIR)logger.o: $(GLOBALSRCDIR)logger.cpp $(GLOBALHEADDIR)logger.h
+$(OBJDIR)logger.o: $(GLOBALSRCDIR)logger.cpp $(ALL_DEPS)
 	mkdir -p $(OBJDIR)
 	$(CC) $(CFLAGS) -c $< -o $@
-$(OBJDIR)assembler.o: $(SRCDIR)assembler.cpp $(HEADDIR)assembler.h
+$(OBJDIR)assembler.o: $(SRCDIR)assembler.cpp $(ALL_DEPS)
 	mkdir -p $(OBJDIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
