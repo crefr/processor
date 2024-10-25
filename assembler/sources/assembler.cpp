@@ -28,23 +28,49 @@ const size_t SIZE_MULTIPLIER = 2;
 const size_t MAX_CMD_LEN = 100;
 
 typedef struct {
-    label_t labels[MAX_LABELS_NUM];
-    fixup_label_t fixups[MAX_FIXUPS_NUM];
+    label_t * labels;
+    fixup_label_t * fixups;
     size_t fixup_top;
     size_t top;
 } label_list_t;
 
 const size_t MAXCMDLEN  = 50;
 
+/// @brief  handles args of push-pop type (ex. 1, [21], rax 5)
 static void scanPushPopArgs(program_t * prog);
-static enum commands getCmdByStr(const char * str);
+
+/// @brief  handles args of jmp commands (jmp, ja, jb, etc.)
 static void handleLableInJmps(program_t * prog, label_list_t * labels);
+
+/// @brief  handles label that may appear somewhere in code
 static void handleLabelInCode(program_t * prog, label_list_t * labels, const char * label_name);
+
+/// @brief  fixing labels as args in jmp commands
 static void fixupLabels(program_t * prog, label_list_t * labels);
+
+/// @brief  dumps label list
 static void labelDump(program_t * prog, label_list_t * labels);
-static void skipComment(FILE * file, const char skip_until);
+
+/// @brief  cuts comments from other string
+static void cutCommentIfNeed(char * line, char com_char);
+
+/// @brief  like stricmp but mine
 static int myStricmp(const char * first_string, const char * second_string);
+
+/// @brief  resizes array with prog if needed
 static void progResizeIfNeed(program_t * prog);
+
+/// @brief  constructs label_list_t
+static label_list_t labelListCtor(size_t labels_num, size_t fixups_num);
+
+/// @brief  destructs label_list_t
+static void labelListDtor(label_list_t * list);
+
+/// @brief  finds label in list and returns ptr to it
+static label_t * findLabelInList(label_list_t * labels, const char * name);
+
+/// @brief  writes header to binary file
+static void writeHeader(FILE * out_file, size_t prog_size)
 
 program_t progCtor(FILE * in_file, FILE * out_file, FILE * out_text_file)
 {
@@ -58,6 +84,7 @@ program_t progCtor(FILE * in_file, FILE * out_file, FILE * out_text_file)
     prog.in_file  = in_file;
     prog.out_file = out_file;
     prog.out_text_file = out_text_file;
+    prog.line_ptr = NULL;
     return prog;
 }
 
@@ -74,17 +101,32 @@ void progDtor(program_t * prog)
         prog->ip++;                                     \
     }                                                   \
     else
+
 size_t assembleRun(program_t * prog)
 {
     assert(prog);
-    label_list_t labels = {};
-    char cmd_buf[MAXCMDLEN] = "";
-    while (fscanf(prog->in_file, "%s", cmd_buf) > 0){
-        progResizeIfNeed(prog);
-        if (strchr(cmd_buf, COMMENT_CHAR) != NULL){
-            skipComment(prog->in_file, '\n');
-            continue;
+    label_list_t labels = labelListCtor(MAX_LABELS_NUM, MAX_FIXUPS_NUM);
+    char curr_str[MAX_LINE_LEN] = "";
+    size_t line_count = 1;
+    while (1){
+        char cmd_buf[MAX_LINE_LEN] = "";
+        int scanned_chars = 0;
+        if (prog->line_ptr == NULL || sscanf(prog->line_ptr, " %s %n", cmd_buf, &scanned_chars) <= 0){
+            int first_nl = 0;
+            int last_nl = 0;
+            if (fscanf(prog->in_file, "%[^\n]%n%*[\n]%n", curr_str, &first_nl, &last_nl) > 0){
+                logPrint(LOG_DEBUG_PLUS, "scanned str #%04zu: \"%s\"\n", line_count, curr_str);
+                cutCommentIfNeed(curr_str, COMMENT_CHAR);
+                prog->line_ptr = curr_str;
+                line_count += (size_t)(last_nl - first_nl);
+                continue;
+            }
+            else
+                break;
         }
+        prog->line_ptr += scanned_chars;
+        progResizeIfNeed(prog);
+
         if (strchr(cmd_buf, ':') != NULL){
             handleLabelInCode(prog, &labels, cmd_buf);
             continue;
@@ -92,37 +134,30 @@ size_t assembleRun(program_t * prog)
 /**************************CRINGE_START*******************************/
         #include "def_commands.h"
         /*else*/{
-                PRINTFANDLOG(LOG_RELEASE, "SYNTAX ERROR: \"%s\" in command %zu\n",
-                            cmd_buf, (size_t)(prog->ip - prog->program));
-                return 0;
-            }
+            PRINTFANDLOG(LOG_RELEASE, "SYNTAX ERROR: \"%s\" in command %zu on the line %zu\n",
+                        cmd_buf, (size_t)(prog->ip - prog->program), line_count);
+            return 0;
+        }
 /**************************CRINGE_END*********************************/
     }
     labelDump(prog, &labels);
     fixupLabels(prog, &labels);
     labelDump(prog, &labels);
+
+    labelListDtor(&labels);
     prog->size = (size_t)(prog->ip - prog->program);
     return prog->size;
 }
 #undef DEF_CMD_
 
-static void skipComment(FILE * file, const char skip_until)
+static void cutCommentIfNeed(char * line, char com_char)
 {
-    assert(file);
-    while(fgetc(file) != skip_until);
+    assert(line);
+    char * com_ptr = strchr(line, com_char);
+    if (com_ptr != NULL)
+        *com_ptr = '\0';
 }
 
-static enum commands getCmdByStr(const char * str)
-{
-    assert(str);
-    for (size_t cmd_index = 0; cmd_index < Cmd_Num; cmd_index++){
-        if (myStricmp(str, Commands[cmd_index].name) == 0)
-            return Commands[cmd_index].id;
-    }
-    return ERROR_CMD;
-}
-
-static void scanArgStrFromFile(FILE * stream, char * str);
 static void scanPushPopArgs(program_t * prog)
 {
     assert(prog);
@@ -134,7 +169,9 @@ static void scanPushPopArgs(program_t * prog)
     char reg_str[ARGMAXLEN + 1] = "";
     int cmd_code = *(prog->ip);
 
-    scanArgStrFromFile(prog->in_file, scanned_str);
+    int scanned_chars = 0;
+    sscanf(prog->line_ptr, "%[^]] %n", scanned_str, &scanned_chars);
+    prog->line_ptr += scanned_chars;
 
     if (sscanf(scanned_str, " [%[^]] ", str) > 0) {;
         cmd_code |= MEM_MASK;
@@ -197,13 +234,38 @@ void progToCode(program_t * prog)
     fwrite(prog->program, sizeof(int), prog->size, prog->out_file);
 }
 
-static label_t * findLabelInList(label_list_t * labels, const char * name);
+static label_list_t labelListCtor(size_t labels_num, size_t fixups_num)
+{
+    label_list_t list = {};
+    list.labels =       (label_t *)calloc(labels_num, sizeof(label_t));
+    list.fixups = (fixup_label_t *)calloc(fixups_num, sizeof(fixup_label_t));
+
+    return list;
+}
+
+static void labelListDtor(label_list_t * list)
+{
+    assert(list);
+    assert(list->labels);
+    assert(list->fixups);
+
+    free(list->labels);
+    list->labels = NULL;
+
+    free(list->fixups);
+    list->fixups = NULL;
+}
+
 static void handleLableInJmps(program_t * prog, label_list_t * labels)
 {
     assert(prog);
     assert(labels);
     char label_str[ARGMAXLEN] = "";
-    fscanf(prog->in_file, " %s ", label_str);
+
+    int scanned_chars = 0;
+    sscanf(prog->line_ptr, " %s %n", label_str, &scanned_chars);
+
+    prog->line_ptr += scanned_chars;
 
     prog->ip++;
     if (strchr(label_str, ':') != NULL){
@@ -305,23 +367,6 @@ static void labelDump(program_t * prog, label_list_t * labels)
         }
     }
     logPrint(LOG_DEBUG, "---LABELS_DUMP_END---\n\n");
-}
-
-static void scanArgStrFromFile(FILE * stream, char * str)
-{
-    assert(stream);
-    assert(str);
-    int c = '\0';
-    while (isspace(c = fgetc(stream)));
-
-    size_t index = 0;
-    while (c != '\n' && c != COMMENT_CHAR){
-        str[index] = (char)c;
-        index++;
-        c = fgetc(stream);
-    }
-    if (c == COMMENT_CHAR)
-        skipComment(stream, '\n');
 }
 
 static int myStricmp(const char * first_string, const char * second_string)

@@ -4,6 +4,7 @@
 #include "mystack.h"
 #include "comands.h"
 
+/// @brief processor struct
 typedef struct
 {
     int * prog;
@@ -21,10 +22,16 @@ typedef enum {
     PROC_PROG_ERROR
 } proc_status_t;
 
+/// @brief  constructs processor struct
 proc_status_t processorCtor(processor_t * proc, FILE * prog_file);
-void processorRun(processor_t * proc);
+
+/// @brief  destructs processor struct
 void processorDtor(processor_t * proc);
 
+/// @brief  runs program from processor struct
+void processorRun(processor_t * proc);
+
+/// @brief  dums processor
 void processorDump(processor_t * proc);
 
 const size_t DRAW_WIDTH = 96;

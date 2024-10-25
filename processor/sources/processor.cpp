@@ -12,8 +12,16 @@
 const size_t MAXCMDLEN = 50;
 const size_t RAM_SIZE = 96 * 36;
 
+/// @brief  reads binary file header, verifying it and getting program size
+static bool readHeader(processor_t * proc, FILE * prog_file);
+
+/// @brief  gets program from binary file
+static proc_status_t processorGetProgFromCode(processor_t * proc, FILE * prog_file);
+
+/// @brief  handles push and pop commands and their args
 static int * GetPushPopArg(processor_t * proc);
 
+/// @brief  drawing RAM as a bitmap with dark and light chars
 static void drawRAM(processor_t * proc, size_t width);
 
 
@@ -40,7 +48,6 @@ void processorRun(processor_t * proc)
 }
 #undef DEF_CMD_
 
-static proc_status_t processorGetProgFromCode(processor_t * proc, FILE * prog_file);
 proc_status_t processorCtor(processor_t * proc, FILE * prog_file)
 {
     assert(proc);
@@ -68,7 +75,25 @@ proc_status_t processorCtor(processor_t * proc, FILE * prog_file)
     return PROC_SUCCESS;
 }
 
-static bool readHeader(processor_t * proc, FILE * prog_file);
+void processorDtor(processor_t * proc)
+{
+    assert(proc);
+    free(proc->prog);
+    proc->prog = NULL;
+
+    stackDtor(proc->call_stk);
+    free(proc->call_stk);
+
+    stackDtor(proc->stk);
+    free(proc->stk);
+
+    free(proc->RAM);
+    proc->RAM = NULL;
+
+    proc->stk = NULL;
+    proc->call_stk = NULL;
+}
+
 static proc_status_t processorGetProgFromCode(processor_t * proc, FILE * prog_file)
 {
     assert(proc);
@@ -93,25 +118,6 @@ static bool readHeader(processor_t * proc, FILE * prog_file)
     if (head.sign != SIGNATURE || head.version != COMMAND_VERSION)
         return false;
     return true;;
-}
-
-void processorDtor(processor_t * proc)
-{
-    assert(proc);
-    free(proc->prog);
-    proc->prog = NULL;
-
-    stackDtor(proc->call_stk);
-    free(proc->call_stk);
-
-    stackDtor(proc->stk);
-    free(proc->stk);
-
-    free(proc->RAM);
-    proc->RAM = NULL;
-
-    proc->stk = NULL;
-    proc->call_stk = NULL;
 }
 
 static int * GetPushPopArg(processor_t * proc)
@@ -199,7 +205,6 @@ static void drawRAM(processor_t * proc, size_t width)
         else
             putchar(WHITE_CHAR);
     }
-    //printf("\033[%zuD\033[%zuA", width, proc->RAM_size / width);
     fflush(stdout);
 }
 
