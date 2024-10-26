@@ -48,7 +48,6 @@ ret
     call PRINT_ERROR:
 ret
 
-
 SOLVE_LINEAR:
     push        0
     push        [2]

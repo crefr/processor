@@ -25,8 +25,10 @@
 #define COND_JUMP(cond)              \
     int a = POP;                     \
     int b = POP;                     \
-    if (b cond a)                    \
+    if (b cond a){                   \
+        logPrint(LOG_DEBUG, "jumping on %zu\n", ARG(1));    \
         SET_IP(ARG(1));              \
+    }                                \
     else                             \
         IP += 2;
 #define MATH_TWO_ARGS(sign)          \
@@ -89,6 +91,7 @@ DEF_CMD_(DUMP, 12,  PUSH_POP_ARG,
 
 DEF_CMD_(JMP,  13,  JMP_ARG,
 {
+    logPrint(LOG_DEBUG, "jumping on %zu\n", ARG(1));
     SET_IP(ARG(1));
 })
 

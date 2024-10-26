@@ -1,8 +1,6 @@
-call TEST:
-
-dump    1
-HLT
+jmp     TEST:
+hlt
 
 TEST:
-    dump    2
-ret
+dump    52
+hlt
