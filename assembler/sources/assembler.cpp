@@ -95,7 +95,7 @@ void progDtor(program_t * prog)
 }
 
 #define DEF_CMD_(cmd_name, num, handle_arg, ...)        \
-    if (myStricmp(#cmd_name, cmd_buf) == 0){            \
+    if (strcasecmp(#cmd_name, cmd_buf) == 0){           \
         *(prog->ip) = num;                              \
         handle_arg;                                     \
         prog->ip++;                                     \

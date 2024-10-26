@@ -114,6 +114,7 @@ DEF_CMD_(RET,  21,  NO_ARGS,
 DEF_CMD_(DRAW, 22,  NO_ARGS,
 {
     DRAW;
+    usleep(30 * 1000);
     IP++;
 })
 DEF_CMD_(NOCMD, 23,  NO_ARGS,
