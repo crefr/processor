@@ -1,5 +1,5 @@
-#define PUSH_POP_ARG        scanPushPopArgs(prog)
-#define JMP_ARG             handleLableInJmps(prog, &labels)
+#define PUSH_POP_ARG        handlePushPopArgs(prog)
+#define JMP_ARG             handleJmpArg(prog, &labels)
 #define NO_ARGS
 
 #define TO_FLOAT(arg)       (((float)(arg)) / ACC_COEF)

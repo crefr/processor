@@ -16,7 +16,7 @@ int main(int argc, char ** argv)
 {
     logStart("asmlog.txt", LOG_DEBUG);
     const char * input_file_name = (argc > 1) ? argv[1] : ("program.asm");
-    FILE * in_file = fopen((argc > 1) ? argv[1] : ("program.asm"), "r");
+    FILE * in_file = fopen(input_file_name, "r");
     assert(in_file != NULL);
 
     char code_file_name[MAX_FILE_NAME] = "";

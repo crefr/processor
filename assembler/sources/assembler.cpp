@@ -37,10 +37,10 @@ typedef struct {
 const size_t MAXCMDLEN  = 50;
 
 /// @brief  handles args of push-pop type (ex. 1, [21], rax 5)
-static void scanPushPopArgs(program_t * prog);
+static void handlePushPopArgs(program_t * prog);
 
 /// @brief  handles args of jmp commands (jmp, ja, jb, etc.)
-static void handleLableInJmps(program_t * prog, label_list_t * labels);
+static void handleJmpArg(program_t * prog, label_list_t * labels);
 
 /// @brief  handles label that may appear somewhere in code
 static void handleLabelInCode(program_t * prog, label_list_t * labels, const char * label_name);
@@ -158,7 +158,7 @@ static void cutCommentIfNeed(char * line, char com_char)
         *com_ptr = '\0';
 }
 
-static void scanPushPopArgs(program_t * prog)
+static void handlePushPopArgs(program_t * prog)
 {
     assert(prog);
     int reg_arg   = 0;
@@ -258,7 +258,7 @@ static void labelListDtor(label_list_t * list)
     list->fixups = NULL;
 }
 
-static void handleLableInJmps(program_t * prog, label_list_t * labels)
+static void handleJmpArg(program_t * prog, label_list_t * labels)
 {
     assert(prog);
     assert(labels);

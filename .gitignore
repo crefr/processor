@@ -21,3 +21,5 @@ asm_progs/ball.txt
 asm_progs/ball.bin
 asm_progs/squares.bin
 asm_progs/squares.txt
+disasm.exe
+disasmlog.txt
