@@ -9,7 +9,7 @@ int main(int argc, const char ** argv)
     logStart("spulog.txt", LOG_DEBUG);
     logCancelBuffer();
 
-    FILE * prog_file = fopen((argc > 1) ? argv[1] : "program_code.bin", "rb");
+    FILE * prog_file = fopen((argc > 1) ? argv[1] : "program.bin", "rb");
     if (prog_file == NULL){
         fprintf(stderr, "Program file can`t be opened\n");
         return 1;

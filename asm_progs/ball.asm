@@ -55,7 +55,7 @@ FOR_HEIGHT:
             call CALC_ADDR:
             push    0                   ;inside
             pop     [rax]
-        ;END_OF_IF_ELSE:
+        END_OF_IF_ELSE:
         jmp     FOR_WIDTH:
 
     FOR_WIDTH_END:

@@ -12,11 +12,11 @@ const size_t MAX_FILE_NAME = 64;
 
 int main(int argc, const char ** argv)
 {
-    logStart("disasmlog.txt", LOG_DEBUG);
+    logStart("disasmlog.txt", LOG_DEBUG_PLUS);
     logCancelBuffer();
 
 
-    const char * input_file_name = (argc > 1) ? argv[1] : ("program_code.bin");
+    const char * input_file_name = (argc > 1) ? argv[1] : ("program.bin");
     FILE * code_file = fopen(input_file_name, "rb");
 
     char out_file_name[MAX_FILE_NAME] = "";

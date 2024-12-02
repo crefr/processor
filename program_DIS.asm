@@ -1,0 +1,6 @@
+JMP 6
+HLT
+JMP 6
+HLT
+DUMP 52 
+HLT

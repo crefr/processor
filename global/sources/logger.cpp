@@ -11,7 +11,7 @@ static FILE * LOGfile = NULL;
 int logStart(const char * logfilename, enum loglevels loglevel)
 {
     LOGlevel = loglevel;
-    LOGfile = fopen(logfilename, "a+");
+    LOGfile = fopen(logfilename, "w");
     if (LOGfile == NULL){
         printf(">>> logger ERROR: cannot open logfile\n");
         return 0;
